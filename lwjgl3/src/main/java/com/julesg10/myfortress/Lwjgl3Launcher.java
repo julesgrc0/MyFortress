@@ -1,8 +1,8 @@
-package myfortress.lwjgl3;
+package com.julesg10.myfortress;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import myfortress.MainGame;
+import com.julesg10.myfortress.MainGame;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {

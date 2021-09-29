@@ -1,4 +1,4 @@
-package myfortress;
+package com.julesg10.myfortress;
 
 import com.badlogic.gdx.Screen;
 

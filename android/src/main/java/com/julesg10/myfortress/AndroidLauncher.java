@@ -1,4 +1,4 @@
-package myfortress;
+package com.julesg10.myfortress;
 
 import android.os.Bundle;
 
