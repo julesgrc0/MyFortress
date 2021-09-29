@@ -30,7 +30,7 @@ android {
 		exclude 'META-INF/dependencies.txt'
 	}
 	defaultConfig {
-		applicationId 'MyFortress'
+		applicationId 'com.julesg10.myfortress'
 		minSdkVersion 19
 		targetSdkVersion 30
 		versionCode 1
