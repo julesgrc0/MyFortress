@@ -1,6 +1,6 @@
 package com.julesg10.myfortress
 
-class AnimationController(max: Float) {
+class DelayController(max: Float) {
 
     private var time: Float = 0f
     private var max: Float = 0f
@@ -9,13 +9,18 @@ class AnimationController(max: Float) {
         this.max = max;
     }
 
-    fun update(delta: Float,animation:()->Boolean): Boolean
+    fun getTime() : Float{
+        return this.time;
+    }
+
+    fun update(delta: Float,change:()->Void): Boolean
     {
         this.time += delta * 100
         if(this.time >= this.max)
         {
             this.time =  0f;
-            return animation();
+            change()
+            return true;
         }
 
         return false;
