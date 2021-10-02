@@ -7,9 +7,14 @@ import com.julesg10.myfortress.MainGame
 
 /** Launches the Android application.  */
 class AndroidLauncher : AndroidApplication() {
+
+    private val game:MainGame = MainGame()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val configuration = AndroidApplicationConfiguration()
-        initialize(MainGame(), configuration)
+        initialize(this.game, configuration)
     }
+
+
 }

@@ -1,19 +1,67 @@
 package com.julesg10.myfortress
 
+import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.Input
 import com.badlogic.gdx.Screen
+import com.badlogic.gdx.graphics.Camera
+import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.graphics.OrthographicCamera
+import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.SpriteBatch
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
+import com.badlogic.gdx.utils.viewport.StretchViewport
+import com.badlogic.gdx.utils.viewport.Viewport
 
-/** First screen of the application. Displayed after the application is created.  */
-class FirstScreen : Screen {
+
+class GameScreen : Screen {
+    private var camera: Camera = OrthographicCamera()
+    private var viewport = StretchViewport(world_width(), world_height(), camera)
+    private var batch = SpriteBatch()
+    private var font: BitmapFont? = null
+
+    companion object {
+        fun world_width(): Float = 100f
+        fun world_height(): Float = 100f
+    }
+
+    init
+    {
+        //this.loadFont()
+    }
+
+    fun loadFont()
+    {
+        val fontGenerator = FreeTypeFontGenerator(Gdx.files.internal(""))
+        val fontParameter = FreeTypeFontParameter()
+
+        fontParameter.size = 72
+        fontParameter.borderWidth = 3.6f
+        fontParameter.color = Color(1f, 1f, 1f, 0.3f)
+        fontParameter.borderColor = Color(0f, 0f, 0f, 0.3f)
+
+        font = fontGenerator.generateFont(fontParameter)
+    }
+
     override fun show() {
         // Prepare your screen here.
     }
 
+    fun update(delta: Float)
+    {
+
+    }
+
     override fun render(delta: Float) {
-        // Draw your screen here. "delta" is the time since last render in seconds.
+        this.update(delta);
+        this.batch.begin();
+
+        this.batch.end();
     }
 
     override fun resize(width: Int, height: Int) {
-        // Resize your screen here. The parameters represent the new window size.
+        viewport.update(width, height, true);
+        batch.setProjectionMatrix(camera.combined);
     }
 
     override fun pause() {
@@ -29,6 +77,6 @@ class FirstScreen : Screen {
     }
 
     override fun dispose() {
-        // Destroy screen's assets here.
+        this.batch.dispose();
     }
 }
