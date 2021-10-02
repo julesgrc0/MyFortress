@@ -7,6 +7,7 @@
 	<uses-sdk android:minSdkVersion="19" android:targetSdkVersion="30" tools:ignore="GradleOverrides"/>
 
 	<application
+			android:screenOrientation="landscape"
 			android:allowBackup="true"
         	android:fullBackupContent="true"
 			android:icon="@drawable/ic_launcher"

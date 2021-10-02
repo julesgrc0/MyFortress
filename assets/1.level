@@ -1,1 +1,15 @@
-Player:
+# [<section>]
+# -><name>: <value>
+
+[Player]
+->position: 0,0
+->direction: 3
+
+[Level]
+->tiles: 4
+# /<position>;<type>;<texture>
+/0,0;2;TopTubeWallFace
+/0,1;0;TopTubeWallFace
+/1,0;0;TopTubeWallFace
+/1,1;2;TopTubeWallFace
+
