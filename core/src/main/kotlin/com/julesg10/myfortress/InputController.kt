@@ -1,22 +1,14 @@
 package com.julesg10.myfortress
 
-class InputKeyManager(max: Float, stop: Boolean) {
+class InputController(max: Float,stop: Boolean) {
     var max: Float = 0f
     private var time: Float = 0f;
-
-    private var stop: Boolean = false;
-    private var switchStop: Boolean = false;
-
+    private var stop = stop;
+    private var waitStop = false;
     init {
         this.max = max;
-        this.stop = stop;
     }
 
-    fun setStop(stop: Boolean)
-    {
-        this.stop = stop;
-        this.switchStop = false;
-    }
 
     fun isActive(delta: Float, input:() -> Boolean): Boolean
     {
@@ -28,17 +20,17 @@ class InputKeyManager(max: Float, stop: Boolean) {
                 this.time = 0f;
                 if(this.stop)
                 {
-                    if(this.switchStop)
+                    if(this.waitStop)
                     {
                         return false;
                     }
-                    this.switchStop = false;
+                    this.waitStop = true;
                 }
+                return true;
             }
-
-            return true;
         }else{
-            this.switchStop = true;
+            this.waitStop = false;
+            this.time = 0f;
         }
 
         return false;

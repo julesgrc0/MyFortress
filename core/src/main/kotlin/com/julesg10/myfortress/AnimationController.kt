@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 
 
 class AnimationTimer(ms: Float){
-    private var time: Float = 0f
+    private var time: Long = -1;
     private var waitvalue: Float = 0f
     private var stop = false;
 
@@ -12,15 +12,19 @@ class AnimationTimer(ms: Float){
         this.waitvalue = ms/10;
     }
 
-    fun update(delta: Float): Boolean
+    fun update(): Boolean
     {
+        if(this.time < 0)
+        {
+            this.time = System.currentTimeMillis()
+        }
         if(this.stop)
         {
             return true;
         }
 
-        this.time += delta * 1000;
-        if(this.time >= this.waitvalue)
+
+        if((System.currentTimeMillis() - this.time) >= this.waitvalue)
         {
             this.stop = true;
             return true;
@@ -31,7 +35,7 @@ class AnimationTimer(ms: Float){
 
     fun restart()
     {
-        this.time = 0f;
+        this.time = -1;
         this.stop = false;
     }
 }
@@ -47,12 +51,20 @@ class AnimationController(framesPerSeconde: Int,framesLength: Int,loop : Int=0) 
     private var max_loop: Int = 0;
 
     var pause: Boolean = false;
-
+    var backToFirst: Boolean = false;
 
     init {
         this.max = 600f/framesPerSeconde;
         this.max_index = framesLength;
         this.max_loop = loop;
+    }
+
+    fun restart()
+    {
+        this.time = 0f;
+        this.index = 0;
+        this.loop = 0;
+        this.pause = false;
     }
 
     fun getTime() : Float{
@@ -89,7 +101,10 @@ class AnimationController(framesPerSeconde: Int,framesLength: Int,loop : Int=0) 
                 if(this.loop >= this.max_loop)
                 {
                     this.loop = 0;
-                    this.index = this.max_index-1;
+                    if(!this.backToFirst)
+                    {
+                        this.index = this.max_index-1;
+                    }
                     this.pause = true;
                 }
             }else{

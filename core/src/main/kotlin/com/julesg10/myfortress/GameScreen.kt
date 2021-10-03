@@ -6,8 +6,10 @@ import com.badlogic.gdx.graphics.*
 import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
+import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.julesg10.myfortress.gameobjects.Level
+import com.julesg10.myfortress.gameobjects.Menu
 
 
 class GameScreen : Screen {
@@ -20,16 +22,16 @@ class GameScreen : Screen {
     private var font: BitmapFont? = null
 
     private val level = Level()
+    private var menu:Menu = Menu(Vector2(0f,0f),font);
     private var gameStates: GameStates = GameStates.LOADING_SCREEN;
 
     private var textureAtlas: TextureAtlas? = null
 
-    private var loadingAnimation:  AnimationController? = null;
-    private var loadingTransition : AnimationTimer = AnimationTimer(10000f);
-    private val loadingFrames =  arrayOfNulls<TextureRegion>(9);
+    private var loadingAnimation: AnimationController? = null;
+    private var loadingTransition: AnimationTimer = AnimationTimer(5000f);
+    private val loadingFrames = arrayOfNulls<TextureRegion>(9);
 
-    enum class GameStates
-    {
+    enum class GameStates {
         LOADING_SCREEN,
         MENU,
         LOADING_LEVEL,
@@ -40,25 +42,42 @@ class GameScreen : Screen {
     companion object {
         fun world_width(): Float = 160f
         fun world_height(): Float = 160f
+
+        fun height_pixel(pixel: Int): Float {
+            return (pixel * 160f / Gdx.graphics.height)
+        }
+
+        fun height_world(pixel: Float): Int {
+            return (pixel * Gdx.graphics.height / 160).toInt()
+        }
+
+        fun width_pixel(pixel: Int): Float {
+            return (pixel * 160f / Gdx.graphics.width)
+        }
+
+        fun width_world(pixel: Float): Int {
+            return (pixel * Gdx.graphics.width / 160).toInt()
+        }
     }
 
-    init
-    {
+    init {
         camera = OrthographicCamera()
         viewport = StretchViewport(world_width(), world_height(), camera)
         batch = SpriteBatch()
 
-        Gdx.gl.glClearColor( 0f, 0f, 0f, 1f);
+        Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         batch.setProjectionMatrix(camera.combined);
 
 
 
         this.loadFont()
         this.loadTextures()
+
+        this.menu.font = this.font;
+        this.menu.loadTextures();
     }
 
-    fun loadFont()
-    {
+    fun loadFont() {
         val fontGenerator = FreeTypeFontGenerator(Gdx.files.internal("Roboto.ttf"))
         val fontParameter = FreeTypeFontParameter()
 
@@ -72,9 +91,8 @@ class GameScreen : Screen {
 
     }
 
-    fun loadTextures()
-    {
-        this.textureAtlas =  TextureAtlas(Gdx.files.internal("sprites.atlas"));
+    fun loadTextures() {
+        this.textureAtlas = TextureAtlas(Gdx.files.internal("sprites.atlas"));
         this.level.loadTextures(this.textureAtlas!!);
 
         val loadingTextureRegions = TextureRegion.split(Texture(Gdx.files.internal("loading_x32.png")), 32, 32);
@@ -87,7 +105,7 @@ class GameScreen : Screen {
             }
         }
 
-        this.loadingAnimation = AnimationController(5,this.loadingFrames.size);
+        this.loadingAnimation = AnimationController(4, this.loadingFrames.size);
 
     }
 
@@ -95,26 +113,29 @@ class GameScreen : Screen {
 
     }
 
-    fun update(delta: Float)
-    {
-        when(this.gameStates)
-        {
-            GameStates.LOADING_SCREEN ->{
-                if(this.loadingAnimation!!.pause)
-                {
-                    if(this.loadingTransition.update(delta))
-                    {
+    fun update(delta: Float) {
+        when (this.gameStates) {
+            GameStates.LOADING_SCREEN -> {
+                if (this.loadingAnimation!!.pause) {
+                    if (this.loadingTransition.update()) {
                         this.gameStates = GameStates.MENU;
                     }
-                }else{
+                } else {
                     this.loadingAnimation?.update(delta) {
                         return@update true
                     };
                 }
-
+            }
+            GameStates.MENU->{
+                if(this.menu.updateState(delta) == Menu.MenuState.START_GAME)
+                {
+                    this.gameStates = GameStates.LOADING_LEVEL
+                }
+            }
+            GameStates.LOADING_LEVEL->{
 
             }
-            GameStates.PLAYING_GAME ->{
+            GameStates.PLAYING_GAME -> {
                 this.level.update(delta);
             }
         }
@@ -123,28 +144,31 @@ class GameScreen : Screen {
     override fun render(delta: Float) {
         this.update(delta);
 
+
         this.batch.begin();
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-
-        when(this.gameStates)
-        {
+        when (this.gameStates) {
             GameStates.LOADING_SCREEN -> {
                 val loadingTexture = this.loadingFrames[this.loadingAnimation?.getIndex()!!];
-                this.batch.draw(loadingTexture,30f,30f,100f,100f);
-            }
+                val w = width_pixel(128 * 4);
+                val h = height_pixel(128 * 4);
 
+                this.batch.draw(loadingTexture, (160f - w) / 2, (160f - h) / 2, w, h);
+            }
+            GameStates.MENU -> {
+                this.menu.render(batch);
+                val fps = "%d".format((1 / delta).toInt());
+                this.font?.draw(batch,fps , 0f, 160f);
+                this.font?.draw(batch, "FPS", 10f + fps.length, 160f);
+            }
             GameStates.PLAYING_GAME -> {
                 this.level.render(this.batch);
             }
-
-            GameStates.PAUSE_GAME ->{
-                this.level.render(this.batch,true);
+            GameStates.PAUSE_GAME -> {
+                this.level.render(this.batch, true);
             }
         }
-
-        this.font?.draw(batch, "%d".format((1/delta).toInt()), 10f, 10f);
-        this.font?.draw(batch, "FPS", 20f, 10f);
 
         this.batch.end();
     }
@@ -155,16 +179,24 @@ class GameScreen : Screen {
     }
 
     override fun pause() {
-        if(this.gameStates == GameStates.PLAYING_GAME)
-        {
+        if (this.gameStates == GameStates.PLAYING_GAME) {
             this.gameStates = GameStates.PAUSE_GAME;
+        }
+
+        if(this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_DEFAULT)
+        {
+            this.menu.menuState = Menu.MenuState.MENU_PAUSE
         }
     }
 
     override fun resume() {
-        if(this.gameStates == GameStates.PAUSE_GAME)
-        {
+        if (this.gameStates == GameStates.PAUSE_GAME) {
             this.gameStates = GameStates.PAUSE_GAME;
+        }
+
+        if(this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_PAUSE)
+        {
+            this.menu.menuState = Menu.MenuState.MENU_DEFAULT
         }
     }
 
