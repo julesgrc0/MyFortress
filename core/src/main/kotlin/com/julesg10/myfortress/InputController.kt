@@ -1,6 +1,6 @@
 package com.julesg10.myfortress
 
-class InputManager(max: Float,stop: Boolean) {
+class InputKeyManager(max: Float, stop: Boolean) {
     var max: Float = 0f
     private var time: Float = 0f;
 
