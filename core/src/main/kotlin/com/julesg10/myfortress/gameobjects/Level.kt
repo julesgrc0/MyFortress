@@ -1,21 +1,23 @@
 package com.julesg10.myfortress.gameobjects
 
 import com.badlogic.gdx.Gdx
+import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
+import java.io.File
 
 
-class Level {
+class Level(batch: Batch,camera: Camera) {
 
-    private var player: Player = Player(Vector2(0f,0f));
+    val player: Player = Player(Vector2(0f,0f));
     private var tiles: MutableList<Tile> = mutableListOf();
     private var textures: MutableList<Pair<String,TextureRegion>> = mutableListOf();
 
-    init {
+    private val batch :Batch= batch;
+    private val camera:Camera = camera;
 
-    }
 
     fun loadTextures(textureAtlas: TextureAtlas)
     {
@@ -31,8 +33,14 @@ class Level {
     fun loadLevel(levelIndex: Int): Boolean
     {
         this.tiles.clear()
-        val handle = Gdx.files.local(levelIndex.toString()+".level")
-        val text = handle.readString() ?: return false
+        val handle = Gdx.files.internal("$levelIndex.level")
+        if(!handle.exists() && handle.isDirectory)
+        {
+            return false;
+        }
+
+        val text = handle.readString();
+
         val lines = text.split("\n");
 
         var section_name: String = "";
@@ -58,8 +66,8 @@ class Level {
                                 when(lname)
                                 {
                                     "position"->{
-                                        this.player.position.x = lvalue.split(",")[0].toFloat()
-                                        this.player.position.y = lvalue.split(",")[2].toFloat()
+                                        val pos = Vector2(lvalue.split(",")[0].toFloat(),lvalue.split(",")[1].toFloat())
+                                        //this.player.move(pos,this.batch,this.camera);
                                     }
                                     "direction"->{
 
@@ -99,6 +107,7 @@ class Level {
 
     fun update(delta: Float)
     {
+
         this.player.update(delta,this.tiles)
     }
 

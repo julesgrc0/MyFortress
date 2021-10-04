@@ -21,7 +21,7 @@ class GameScreen : Screen {
 
     private var font: BitmapFont? = null
 
-    private val level = Level()
+    private val level = Level(batch,camera);
     private var menu:Menu = Menu(Vector2(0f,0f),font);
     private var gameStates: GameStates = GameStates.LOADING_SCREEN;
 
@@ -58,17 +58,13 @@ class GameScreen : Screen {
         fun width_world(pixel: Float): Int {
             return (pixel * Gdx.graphics.width / 160).toInt()
         }
+
+        fun default_fontscale() = 0.1f;
     }
 
     init {
-        camera = OrthographicCamera()
-        viewport = StretchViewport(world_width(), world_height(), camera)
-        batch = SpriteBatch()
-
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         batch.setProjectionMatrix(camera.combined);
-
-
 
         this.loadFont()
         this.loadTextures()
@@ -87,7 +83,7 @@ class GameScreen : Screen {
         fontParameter.borderColor = Color(0f, 0f, 0f, 0f)
 
         font = fontGenerator.generateFont(fontParameter)
-        font?.data?.setScale(0.1f)
+        font?.data?.setScale(default_fontscale())
 
     }
 
@@ -133,7 +129,13 @@ class GameScreen : Screen {
                 }
             }
             GameStates.LOADING_LEVEL->{
-
+                if(this.level.loadLevel(1))
+                {
+                    this.gameStates = GameStates.PLAYING_GAME;
+                }
+                else{
+                    this.gameStates = GameStates.MENU;
+                }
             }
             GameStates.PLAYING_GAME -> {
                 this.level.update(delta);
@@ -163,6 +165,15 @@ class GameScreen : Screen {
                 this.font?.draw(batch, "FPS", 10f + fps.length, 160f);
             }
             GameStates.PLAYING_GAME -> {
+                val fps = "%d".format((1 / delta).toInt());
+                this.font?.draw(batch,fps , 0f, 160f);
+                this.font?.draw(batch, "FPS", 10f + fps.length, 160f);
+
+                this.font?.data?.setScale(0.08f);
+                this.font?.draw(batch,"(${this.level.player.position.x};${this.level.player.position.y})" , 0f, 150f);
+                this.font?.draw(batch,"(${this.camera.position.x};${this.camera.position.y})" , 0f, 140f);
+                this.font?.data?.setScale(default_fontscale());
+
                 this.level.render(this.batch);
             }
             GameStates.PAUSE_GAME -> {
