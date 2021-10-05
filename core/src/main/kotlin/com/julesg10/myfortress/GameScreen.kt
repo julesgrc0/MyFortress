@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.*
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFontParameter
 import com.badlogic.gdx.math.Vector2
+import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.julesg10.myfortress.gameobjects.Level
 import com.julesg10.myfortress.gameobjects.Menu
@@ -15,14 +16,18 @@ import com.julesg10.myfortress.gameobjects.Menu
 class GameScreen : Screen {
 
 
-    private var camera: Camera = OrthographicCamera()
-    private var viewport = StretchViewport(world_width(), world_height(), camera)
-    private var batch = SpriteBatch()
+    private val camera: Camera = OrthographicCamera()
+    private val viewport = StretchViewport(world_width(), world_height(), camera)
+    private val batch = SpriteBatch()
+
+    private val hudcamera: Camera = OrthographicCamera()
+    private val hudviewport = StretchViewport(world_width(), world_height(), hudcamera)
+    private val hudBatch = SpriteBatch();
 
     private var font: BitmapFont? = null
 
-    private val level = Level(batch,camera);
-    private var menu:Menu = Menu(Vector2(0f,0f),font);
+    private val level = Level(batch, camera);
+    private var menu: Menu = Menu(Vector2(0f, 0f), font);
     private var gameStates: GameStates = GameStates.LOADING_SCREEN;
 
     private var textureAtlas: TextureAtlas? = null
@@ -60,11 +65,31 @@ class GameScreen : Screen {
         }
 
         fun default_fontscale() = 0.1f;
+
+        fun camera_startvalue() = 80f;
+
+        fun camera_target(position: Vector2, cameraPosition: Vector3): Vector2 {
+            return Vector2(
+                position.x + (cameraPosition.x - camera_startvalue()),
+                position.y + (cameraPosition.y - camera_startvalue())
+            )
+        }
+
+        fun camera_target_static(position: Vector2, cameraPosition: Vector3): Vector2 {
+            return Vector2(
+                (position.x + cameraPosition.x) - camera_startvalue(),
+                (position.y + cameraPosition.y) - camera_startvalue()
+            )
+        }
+
     }
 
     init {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         batch.setProjectionMatrix(camera.combined);
+
+
+        hudBatch.setProjectionMatrix(hudcamera.combined)
 
         this.loadFont()
         this.loadTextures()
@@ -122,23 +147,20 @@ class GameScreen : Screen {
                     };
                 }
             }
-            GameStates.MENU->{
-                if(this.menu.updateState(delta) == Menu.MenuState.START_GAME)
-                {
+            GameStates.MENU -> {
+                if (this.menu.updateState(delta, this.camera) == Menu.MenuState.START_GAME) {
                     this.gameStates = GameStates.LOADING_LEVEL
                 }
             }
-            GameStates.LOADING_LEVEL->{
-                if(this.level.loadLevel(1))
-                {
+            GameStates.LOADING_LEVEL -> {
+                if (this.level.loadLevel(1)) {
                     this.gameStates = GameStates.PLAYING_GAME;
-                }
-                else{
+                } else {
                     this.gameStates = GameStates.MENU;
                 }
             }
             GameStates.PLAYING_GAME -> {
-                this.level.update(delta);
+                this.level.update(delta, this.camera);
             }
         }
     }
@@ -146,7 +168,7 @@ class GameScreen : Screen {
     override fun render(delta: Float) {
         this.update(delta);
 
-
+        batch.projectionMatrix = camera.combined;
         this.batch.begin();
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -160,19 +182,10 @@ class GameScreen : Screen {
             }
             GameStates.MENU -> {
                 this.menu.render(batch);
-                val fps = "%d".format((1 / delta).toInt());
-                this.font?.draw(batch,fps , 0f, 160f);
-                this.font?.draw(batch, "FPS", 10f + fps.length, 160f);
+
             }
             GameStates.PLAYING_GAME -> {
-                val fps = "%d".format((1 / delta).toInt());
-                this.font?.draw(batch,fps , 0f, 160f);
-                this.font?.draw(batch, "FPS", 10f + fps.length, 160f);
 
-                this.font?.data?.setScale(0.08f);
-                this.font?.draw(batch,"(${this.level.player.position.x};${this.level.player.position.y})" , 0f, 150f);
-                this.font?.draw(batch,"(${this.camera.position.x};${this.camera.position.y})" , 0f, 140f);
-                this.font?.data?.setScale(default_fontscale());
 
                 this.level.render(this.batch);
             }
@@ -182,11 +195,37 @@ class GameScreen : Screen {
         }
 
         this.batch.end();
+
+        if (this.gameStates == GameStates.PLAYING_GAME) {
+            this.hudBatch.begin();
+            val fps = "%d".format((1 / delta).toInt());
+            this.font?.draw(this.hudBatch, fps, 0f, 160f);
+            this.font?.draw(this.hudBatch, "FPS", 10f + fps.length, 160f);
+
+            this.font?.data?.setScale(0.08f);
+            this.font?.draw(
+                this.hudBatch,
+                "(${this.level.player.position.x};${this.level.player.position.y})",
+                0f,
+                150f
+            );
+            this.font?.draw(
+                this.hudBatch,
+                "(${this.camera.position.x - camera_startvalue()};${this.camera.position.y - camera_startvalue()})",
+                0f,
+                140f
+            );
+            this.font?.data?.setScale(default_fontscale());
+            this.hudBatch.end();
+        }
     }
 
     override fun resize(width: Int, height: Int) {
         viewport.update(width, height, true);
         batch.setProjectionMatrix(camera.combined);
+
+        hudviewport.update(width, height, true)
+        hudBatch.projectionMatrix = hudcamera.combined;
     }
 
     override fun pause() {
@@ -194,8 +233,7 @@ class GameScreen : Screen {
             this.gameStates = GameStates.PAUSE_GAME;
         }
 
-        if(this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_DEFAULT)
-        {
+        if (this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_DEFAULT) {
             this.menu.menuState = Menu.MenuState.MENU_PAUSE
         }
     }
@@ -205,8 +243,7 @@ class GameScreen : Screen {
             this.gameStates = GameStates.PAUSE_GAME;
         }
 
-        if(this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_PAUSE)
-        {
+        if (this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_PAUSE) {
             this.menu.menuState = Menu.MenuState.MENU_DEFAULT
         }
     }

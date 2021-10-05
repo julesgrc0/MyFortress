@@ -9,25 +9,21 @@ class Player(position: Vector2): GameObj(position) {
 
     val size = Tile.tile_size();
 
-    fun move(position: Vector2,batch:Batch,camera: Camera)
-    {
+    fun move(position: Vector2, camera: Camera) {
         this.position = position;
-        val x = (camera.viewportWidth - this.size.x)/2;
-        val y = (camera.viewportHeight - this.size.y)/2;
+        val x = (camera.viewportWidth - this.size.x) / 2;
+        val y = (camera.viewportHeight - this.size.y) / 2;
 
-        camera.position.set(x,y,0f);
+        camera.position.set(camera.position.x + x, camera.position.y + y, camera.position.z);
         camera.update();
 
-        batch.projectionMatrix = camera.combined;
     }
 
-    override fun render(batch: Batch)
-    {
+    override fun render(batch: Batch) {
 
     }
 
-    fun update(delta: Float,tiles: MutableList<Tile>): MutableList<Tile>
-    {
+    fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>): MutableList<Tile> {
         return tiles;
     }
 }
