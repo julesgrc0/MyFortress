@@ -10,7 +10,8 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.julesg10.myfortress.gameobjects.Level
-import com.julesg10.myfortress.gameobjects.Menu
+import com.julesg10.myfortress.hudobjects.HudObj
+import com.julesg10.myfortress.hudobjects.Menu
 
 
 class GameScreen : Screen {
@@ -87,8 +88,6 @@ class GameScreen : Screen {
     init {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
         batch.setProjectionMatrix(camera.combined);
-
-
         hudBatch.setProjectionMatrix(hudcamera.combined)
 
         this.loadFont()
@@ -103,11 +102,13 @@ class GameScreen : Screen {
         val fontParameter = FreeTypeFontParameter()
 
         fontParameter.size = 72
-        fontParameter.borderWidth = 3.6f
+        fontParameter.borderWidth = 8f//3.6f
+        fontParameter.borderGamma = 0.5f
         fontParameter.color = Color(1f, 1f, 1f, 1f)
         fontParameter.borderColor = Color(0f, 0f, 0f, 0f)
 
         font = fontGenerator.generateFont(fontParameter)
+        font?.setUseIntegerPositions(false)
         font?.data?.setScale(default_fontscale())
 
     }
@@ -169,6 +170,7 @@ class GameScreen : Screen {
         this.update(delta);
 
         batch.projectionMatrix = camera.combined;
+
         this.batch.begin();
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
@@ -180,44 +182,29 @@ class GameScreen : Screen {
 
                 this.batch.draw(loadingTexture, (160f - w) / 2, (160f - h) / 2, w, h);
             }
-            GameStates.MENU -> {
-                this.menu.render(batch);
-
-            }
             GameStates.PLAYING_GAME -> {
-
-
                 this.level.render(this.batch);
             }
             GameStates.PAUSE_GAME -> {
                 this.level.render(this.batch, true);
             }
         }
-
         this.batch.end();
 
-        if (this.gameStates == GameStates.PLAYING_GAME) {
-            this.hudBatch.begin();
-            val fps = "%d".format((1 / delta).toInt());
-            this.font?.draw(this.hudBatch, fps, 0f, 160f);
-            this.font?.draw(this.hudBatch, "FPS", 10f + fps.length, 160f);
-
-            this.font?.data?.setScale(0.08f);
-            this.font?.draw(
-                this.hudBatch,
-                "(${this.level.player.position.x};${this.level.player.position.y})",
-                0f,
-                150f
-            );
-            this.font?.draw(
-                this.hudBatch,
-                "(${this.camera.position.x - camera_startvalue()};${this.camera.position.y - camera_startvalue()})",
-                0f,
-                140f
-            );
-            this.font?.data?.setScale(default_fontscale());
-            this.hudBatch.end();
+        this.hudBatch.begin();
+        when(this.gameStates)
+        {
+            GameStates.MENU -> {
+                this.menu.render(this.hudBatch);
+            }
+            GameStates.PLAYING_GAME ->{
+                val fps = "%d".format((1 / delta).toInt());
+                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,160f),width = 0f,str = arrayOf(fps,"FPS"))
+                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,150f),width = 0f,str = arrayOf("player:","(${this.level.player.position.x};${this.level.player.position.y})"))
+                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,140f),width = 0f,str = arrayOf("camera:","(${this.camera.position.x - camera_startvalue()};${this.camera.position.y - camera_startvalue()})",))
+            }
         }
+        this.hudBatch.end();
     }
 
     override fun resize(width: Int, height: Int) {
