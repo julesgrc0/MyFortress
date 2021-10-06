@@ -24,7 +24,9 @@ class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(
 
     enum class TileTypes {
         FLOOR,
-        WALL
+        WALL,
+        DOOR,
+
     }
 
     override fun render(batch: Batch) {

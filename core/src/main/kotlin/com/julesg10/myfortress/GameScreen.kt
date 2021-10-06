@@ -10,8 +10,11 @@ import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.StretchViewport
 import com.julesg10.myfortress.gameobjects.Level
+import com.julesg10.myfortress.gameobjects.Tile
 import com.julesg10.myfortress.hudobjects.HudObj
 import com.julesg10.myfortress.hudobjects.Menu
+import java.lang.Math.round
+import kotlin.math.roundToInt
 
 
 class GameScreen : Screen {
@@ -131,11 +134,14 @@ class GameScreen : Screen {
 
     }
 
+
+
     override fun show() {
 
     }
 
     fun update(delta: Float) {
+
         when (this.gameStates) {
             GameStates.LOADING_SCREEN -> {
                 if (this.loadingAnimation!!.pause) {
@@ -161,6 +167,27 @@ class GameScreen : Screen {
                 }
             }
             GameStates.PLAYING_GAME -> {
+                if(Gdx.input.isTouched)
+                {
+                    
+                    val speed = delta * 10
+                    val move = Vector2(this.camera.position.x - (Gdx.input.deltaX*speed),this.camera.position.y + (Gdx.input.deltaY*speed));
+
+                    this.camera.position.set(Vector3(move,this.camera.position.z));
+                    this.camera.update()
+
+                    val roundX:Float = (width_pixel(Gdx.input.x) / Tile.tile_size().x).roundToInt() * Tile.tile_size().x;
+                    val roundY:Float = ((world_height() - height_pixel(Gdx.input.y)) / Tile.tile_size().y).roundToInt() * Tile.tile_size().x;
+
+                    val obj = camera_target(Vector2(0f,0f),this.camera.position)
+                    val touch = camera_target(Vector2(roundX,roundY),this.camera.position)
+
+                    if(obj.x.roundToInt() == touch.x.roundToInt() && obj.y.roundToInt() == touch.y.roundToInt())
+                    {
+                        println("Tile clicked")
+                    }
+                }
+
                 this.level.update(delta, this.camera);
             }
         }

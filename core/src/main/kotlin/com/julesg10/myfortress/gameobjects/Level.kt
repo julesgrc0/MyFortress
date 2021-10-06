@@ -19,8 +19,6 @@ class Level(batch: Batch,camera: Camera) {
     private val batch: Batch = batch;
     private val camera: Camera = camera;
 
-
-
     fun loadTextures(textureAtlas: TextureAtlas) {
         val textureNames: List<String> = listOf("BottomTubeWallFace", "TopTubeWallFace");
 
@@ -43,15 +41,24 @@ class Level(batch: Batch,camera: Camera) {
 
         var section_name: String = "";
         for (line in lines) {
+
             if (!line.startsWith("#")) {
-                if (line.startsWith("[") && line.endsWith("]")) {
-                    section_name = line.replace("[", "").replace("]", "").toLowerCase();
+
+                if (line.startsWith("[") && line.endsWith("]\r")) {
+                    line.replace("[", "")
+                    line.replace("]\r", "")
+                    line.toLowerCase();
+                    section_name = line
+
                 } else if (section_name != "") {
                     if (line.startsWith("->")) {
-                        var llist = line.split(":")
+                        val llist = line.split(":")
                         if (llist.size == 2) {
-                            var lname = llist[0].replace("->", "")
-                            var lvalue = llist[1].trim()
+                            llist[0].replace("->", "")
+                            llist[1].trim()
+
+                            val lname = llist[0]
+                            val lvalue = llist[1]
 
                             if (section_name == "player") {
                                 when (lname) {
@@ -67,21 +74,24 @@ class Level(batch: Batch,camera: Camera) {
                             }
                         }
                     } else if (line.startsWith("/")) {
-                        val parts = line.split(";");
+
+                        val parts = line.split(";").toMutableList();
                         if (parts.size == 3) {
-                            val pos = parts[0].replace("/", "").replace("(", "").replace(")", "");
 
-                            val x = pos.split(",")[0].toFloat();
-                            val y = pos.split(",")[0].toFloat();
+                            val pos = parts[0].replace("/", "").replace("(", "").replace(")", "").split(",")
+                            val x = pos[0].toInt().toFloat();
+                            val y = pos[1].toInt().toFloat();
 
-                            val type: Tile.TileTypes = Tile.TileTypes.values()[parts[2].toInt()];
 
+                            val type: Tile.TileTypes = Tile.TileTypes.values()[parts[1].toInt()];
 
                             for (pair in this.textures) {
-                                if (pair.first == parts[3]) {
+
+                                if (pair.first.contentEquals(parts[2].replace("\r",""))) {
 
                                     val tile = Tile(Vector2(x, y), type, pair.second);
                                     this.tiles.add(tile)
+
                                     break;
                                 }
                             }
