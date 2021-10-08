@@ -13,11 +13,11 @@ import com.julesg10.myfortress.gameobjects.Level
 import com.julesg10.myfortress.gameobjects.Tile
 import com.julesg10.myfortress.hudobjects.HudObj
 import com.julesg10.myfortress.hudobjects.Menu
-import java.lang.Math.round
 import kotlin.math.roundToInt
 
 
 class GameScreen : Screen {
+
 
 
     private val camera: Camera = OrthographicCamera()
@@ -30,11 +30,12 @@ class GameScreen : Screen {
 
     private var font: BitmapFont? = null
 
-    private val level = Level(batch, camera);
+    private val level = Level();
     private var menu: Menu = Menu(Vector2(0f, 0f), font);
     private var gameStates: GameStates = GameStates.LOADING_SCREEN;
 
     private var textureAtlas: TextureAtlas? = null
+    private var fortressTextures: Array<Array<TextureRegion>>? = null;
 
     private var loadingAnimation: AnimationController? = null;
     private var loadingTransition: AnimationTimer = AnimationTimer(5000f);
@@ -118,7 +119,10 @@ class GameScreen : Screen {
 
     fun loadTextures() {
         this.textureAtlas = TextureAtlas(Gdx.files.internal("sprites.atlas"));
-        this.level.loadTextures(this.textureAtlas!!);
+
+
+        this.fortressTextures = TextureRegion.split(Texture(Gdx.files.internal("fortress.png")), 16, 16);
+        this.level.loadTextures(this.fortressTextures);
 
         val loadingTextureRegions = TextureRegion.split(Texture(Gdx.files.internal("loading_x32.png")), 32, 32);
         var k = 0;
@@ -169,7 +173,7 @@ class GameScreen : Screen {
             GameStates.PLAYING_GAME -> {
                 if(Gdx.input.isTouched)
                 {
-                    
+
                     val speed = delta * 10
                     val move = Vector2(this.camera.position.x - (Gdx.input.deltaX*speed),this.camera.position.y + (Gdx.input.deltaY*speed));
 

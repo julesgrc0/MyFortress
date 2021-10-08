@@ -7,9 +7,14 @@
 
 [Level]
 ->tiles: 4
-# /<position>;<type>;<texture>
-/0,0;2;TopTubeWallFace
-/0,1;0;TopTubeWallFace
-/1,0;0;TopTubeWallFace
-/1,1;2;TopTubeWallFace
+# (old) /<position>;<type>;<texture>
+# (new) /<position>;<type>;<texture_x>;<texture_y>
+/0,0;2;4;0
+/0,1;2;4;0
+/1,0;2;4;0
+/1,1;2;4;0
+/1,2;2;4;0
+/2,2;2;4;0
+/3,2;2;4;0
+/4,2;2;11;14
 

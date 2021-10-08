@@ -12,9 +12,10 @@ class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(
 
     private var type: TileTypes = TileTypes.FLOOR;
     private var texture: TextureRegion;
+    var rotation: Float = 0f;
 
     companion object {
-        fun tile_size() = Vector2(20f, 20f);
+        fun tile_size() = Vector2(16f, 16f);
     }
 
     init {
@@ -30,7 +31,7 @@ class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(
     }
 
     override fun render(batch: Batch) {
-        batch.draw(this.texture, 0f, 0f, 0f, 0f, 16f, 16f, 1f, 1f, 0f);
+        batch.draw(this.texture, this.position.x, this.position.y, 0f, 0f, tile_size().x, tile_size().y, 1f, 1f, this.rotation);
     }
 
     override fun update(delta: Float, camera: Camera) {
