@@ -37,7 +37,7 @@ class Button(position: Vector2,
     private val activeAnimation = AnimationController(10, active.size, -1)
 
     private var clickCount: Int = 0;
-    private val clickController = InputController(200f, true);
+    private val clickController = InputController(50f, true);
 
     private var activeState: Boolean = false;
     private var fontScale: Float = 0f;
@@ -108,8 +108,11 @@ class Button(position: Vector2,
     fun isclick(delta: Float, cameraPosition: Vector2): Boolean {
         val lastState = this.activeState;
         val rtn = this.clickController.isActive(delta) {
-            if (Gdx.input.isTouched && this.click(cameraPosition)) {
-                this.eventClick = true;
+            if (Gdx.input.isTouched) {
+                if(this.click(cameraPosition))
+                {
+                    this.eventClick = true;
+                }
                 this.activeState = true;
             } else {
                 this.activeState = false;
@@ -139,7 +142,7 @@ class Button(position: Vector2,
             };
         }
 
-        return rtn;
+        return rtn == InputController.InputStates.CLICK;
     }
 
     private fun click(camera: Vector2): Boolean {
