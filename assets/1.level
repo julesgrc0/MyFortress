@@ -1,20 +1,60 @@
+#$<name>: <value>
 # [<section>]
 # -><name>: <value>
+# (old) /<position>;<type>;<texture>
+# (new) /<position>;<type>;<texture_position>
+
+# player vars
+$p_default: 0,0
+$p_speed: 8f
+
+# textures vars
+$floor: 2,3
+
+$wall_start: 0,1
+$wall_end: 2,1
+$wall_fill: 1,1
+
+$wall_flag_blue: 11,4
+$wall_flag_red: 12,4
+$wall_flag_green: 13,4
+$wall_flag_yellow: 14,4
 
 [Player]
-->position: 0,0
-->direction: 3
+->position: $p_default
+->speed: $p_speed
 
 [Level]
 ->tiles: 4
-# (old) /<position>;<type>;<texture>
-# (new) /<position>;<type>;<texture_x>;<texture_y>
-/0,0;2;4;0
-/0,1;2;4;0
-/1,0;2;4;0
-/1,1;2;4;0
-/1,2;2;4;0
-/2,2;2;4;0
-/3,2;2;4;0
-/4,2;2;4;0
+
+/1,0;2;$floor
+/1,1;2;$floor
+/1,2;2;$floor
+
+/2,0;2;$floor
+/2,1;2;$floor
+/2,2;2;$floor
+
+/3,0;2;$floor
+/3,1;2;$floor
+/3,2;2;$floor
+
+/4,0;2;$floor
+/4,1;2;$floor
+/4,2;2;$floor
+
+/5,0;2;$floor
+/5,1;2;$floor
+/5,2;2;$floor
+
+/6,0;2;$floor
+/6,1;2;$floor
+/6,2;2;$floor
+
+/1,3;2;$wall_start
+/2,3;2;$wall_fill
+/3,3;2;$wall_fill
+/4,3;2;$wall_flag_red
+/5,3;2;$wall_fill
+/6,3;2;$wall_end
 

@@ -37,7 +37,7 @@ class Button(position: Vector2,
     private val activeAnimation = AnimationController(10, active.size, -1)
 
     private var clickCount: Int = 0;
-    private val clickController = InputController(50f, true);
+    private val clickController = InputController(10f, true);
 
     private var activeState: Boolean = false;
     private var fontScale: Float = 0f;

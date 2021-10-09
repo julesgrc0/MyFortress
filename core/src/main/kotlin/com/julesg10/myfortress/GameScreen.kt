@@ -9,15 +9,16 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator.FreeTypeFont
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.viewport.StretchViewport
+import com.julesg10.myfortress.gameobjects.Direction
 import com.julesg10.myfortress.gameobjects.Level
 import com.julesg10.myfortress.gameobjects.Tile
 import com.julesg10.myfortress.hudobjects.HudObj
 import com.julesg10.myfortress.hudobjects.Menu
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 
 class GameScreen : Screen {
-
 
 
     private val camera: Camera = OrthographicCamera()
@@ -54,19 +55,24 @@ class GameScreen : Screen {
         fun world_height(): Float = 160f
 
         fun height_pixel(pixel: Int): Float {
-            return (pixel * 160f / Gdx.graphics.height)
+            return (pixel * world_height() / Gdx.graphics.height)
         }
 
         fun height_world(pixel: Float): Int {
-            return (pixel * Gdx.graphics.height / 160).toInt()
+            return (pixel * Gdx.graphics.height / world_height()).toInt()
         }
 
         fun width_pixel(pixel: Int): Float {
-            return (pixel * 160f / Gdx.graphics.width)
+            return (pixel * world_width() / Gdx.graphics.width)
         }
 
         fun width_world(pixel: Float): Int {
-            return (pixel * Gdx.graphics.width / 160).toInt()
+            return (pixel * Gdx.graphics.width / world_width()).toInt()
+        }
+
+        fun size_world(pixel: Vector2): Vector2
+        {
+            return Vector2(width_pixel(pixel.x.toInt()), height_pixel(pixel.y.toInt()))
         }
 
         fun default_fontscale() = 0.1f;
@@ -87,10 +93,58 @@ class GameScreen : Screen {
             )
         }
 
+        fun touchObject(
+            objPosition: Vector2,
+            objSize: Vector2,
+            touchPosition: Vector2,
+            touchSize: Vector2,
+            cameraPosition: Vector3,
+            roundToObj: Boolean
+        ): Boolean {
+            var roundX: Float = (width_pixel(touchPosition.x.toInt()) / objSize.x).roundToInt() * objSize.x;
+            var roundY: Float =
+                ((world_height() - height_pixel(touchPosition.y.toInt())) / objSize.y).roundToInt() * objSize.y;
+
+            if (!roundToObj) {
+                roundX = width_pixel(touchPosition.x.toInt())
+                roundY = world_height() - height_pixel(touchPosition.y.toInt())
+            }
+
+            val obj = Vector2((objPosition.x + cameraPosition.x) - 80f, (objPosition.y + cameraPosition.y) - 80f);
+
+            val touch = size_world(camera_target(Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()),cameraPosition))
+            touch.x -= cameraPosition.x
+            touch.y -= cameraPosition.y
+
+            obj.x = obj.x.roundToInt().toFloat()
+            obj.y = obj.x.roundToInt().toFloat()
+
+            touch.x = touch.x.roundToInt().toFloat()
+            touch.y = touch.x.roundToInt().toFloat()
+
+            println("${obj.x} == ${touch.x} && ${obj.y} == ${touch.y}")
+
+            if (obj.x < touch.x + objSize.x &&
+                obj.x + objSize.x > touch.x &&
+                obj.y < touch.y + objSize.y &&
+                obj.y + objSize.y > touch.y
+            ) {
+                return true;
+            }
+
+            return false;
+        }
+
     }
 
     init {
         Gdx.gl.glClearColor(0f, 0f, 0f, 1f);
+
+        Gdx.gl.glEnable(GL20.GL_BLEND);
+        Gdx.gl.glBlendFunc(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+        Gdx.gl.glDisable(GL20.GL_BLEND);
+
+
         batch.setProjectionMatrix(camera.combined);
         hudBatch.setProjectionMatrix(hudcamera.combined)
 
@@ -139,7 +193,6 @@ class GameScreen : Screen {
     }
 
 
-
     override fun show() {
 
     }
@@ -171,29 +224,96 @@ class GameScreen : Screen {
                 }
             }
             GameStates.PLAYING_GAME -> {
-                if(Gdx.input.isTouched)
-                {
-
-                    val speed = delta * 10
-                    val move = Vector2(this.camera.position.x - (Gdx.input.deltaX*speed),this.camera.position.y + (Gdx.input.deltaY*speed));
-
-                    this.camera.position.set(Vector3(move,this.camera.position.z));
-                    this.camera.update()
-
-                    val roundX:Float = (width_pixel(Gdx.input.x) / Tile.tile_size().x).roundToInt() * Tile.tile_size().x;
-                    val roundY:Float = ((world_height() - height_pixel(Gdx.input.y)) / Tile.tile_size().y).roundToInt() * Tile.tile_size().x;
-
-                    val obj = camera_target(Vector2(0f,0f),this.camera.position)
-                    val touch = camera_target(Vector2(roundX,roundY),this.camera.position)
-
-                    if(obj.x.roundToInt() == touch.x.roundToInt() && obj.y.roundToInt() == touch.y.roundToInt())
-                    {
-                        println("Tile clicked")
-                    }
-                }
-
+                //this.debugCamera(delta)
+                this.playerCamera(delta);
                 this.level.update(delta, this.camera);
             }
+        }
+    }
+
+    private val playerController : InputController = InputController(100f,true);
+
+    fun playerCamera(delta: Float)
+    {
+        val state = this.playerController.isActive(delta) {
+            return@isActive Gdx.input.isTouched;
+        }
+        if(state == InputController.InputStates.HOVER)
+        {
+        val speed = delta * this.level.player.speed
+        if (Gdx.input.isTouched) {
+            val maxMove = 20;
+            val replaceMoveValue = 15;
+
+            var deltaX = Gdx.input.deltaX
+            var deltaY = Gdx.input.deltaY
+
+            if(abs(deltaX) >= maxMove)
+            {
+                    if(deltaX > 0)
+                    {
+                        deltaX = replaceMoveValue;
+                    }else{
+                        deltaX = -replaceMoveValue;
+                    }
+            }
+
+            if(abs(deltaY) >= maxMove)
+            {
+                if(deltaY > 0)
+                {
+                    deltaY = replaceMoveValue;
+                }else{
+                    deltaY = -replaceMoveValue;
+                }
+            }
+
+
+
+            if(abs(deltaX) > abs(deltaY))
+            {
+                if(deltaX < 0)
+                {
+                    this.level.player.direction = Direction.LEFT
+                }else{
+                    this.level.player.direction = Direction.RIGHT
+                }
+                this.level.player.position.x -= (deltaX * speed)
+            }else{
+                this.level.player.position.y += (deltaY * speed)
+            }
+        }
+
+        /*val deltaXCam = (this.camera.position.x-80f) - (this.level.player.position.x/Tile.tile_size().x).roundToInt()*Tile.tile_size().x;
+        val deltaYCam = (this.camera.position.y-80f) - (this.level.player.position.y/Tile.tile_size().y).roundToInt()*Tile.tile_size().y;
+        */
+
+        this.camera.position.set(Vector3( this.level.player.position.x,this.level.player.position.y , this.camera.position.z));
+        this.camera.update()
+        }
+    }
+
+    fun debugCamera(delta: Float) {
+        if (Gdx.input.isTouched) {
+            val speed = delta * 10
+            val move = Vector2(
+                this.camera.position.x - (Gdx.input.deltaX * speed),
+                this.camera.position.y + (Gdx.input.deltaY * speed)
+            );
+
+            this.camera.position.set(Vector3(move, this.camera.position.z));
+            this.camera.update()
+
+            val isTouch = touchObject(
+                Vector2(0f, 0f),
+                Tile.tile_size(),
+                Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()),
+                Tile.tile_size(),
+                this.camera.position,
+                false
+            )
+
+            println("$isTouch")
         }
     }
 
@@ -217,22 +337,46 @@ class GameScreen : Screen {
                 this.level.render(this.batch);
             }
             GameStates.PAUSE_GAME -> {
+
                 this.level.render(this.batch, true);
             }
         }
         this.batch.end();
 
         this.hudBatch.begin();
-        when(this.gameStates)
-        {
+        when (this.gameStates) {
             GameStates.MENU -> {
                 this.menu.render(this.hudBatch);
             }
-            GameStates.PLAYING_GAME ->{
+            GameStates.PLAYING_GAME -> {
                 val fps = "%d".format((1 / delta).toInt());
-                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,160f),width = 0f,str = arrayOf(fps,"FPS"))
-                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,150f),width = 0f,str = arrayOf("player:","(${this.level.player.position.x};${this.level.player.position.y})"))
-                HudObj.HUDText(this.font,this.hudBatch,fontSize = 0.08f,position = Vector2(0f,140f),width = 0f,str = arrayOf("camera:","(${this.camera.position.x - camera_startvalue()};${this.camera.position.y - camera_startvalue()})",))
+                HudObj.HUDText(
+                    this.font,
+                    this.hudBatch,
+                    fontSize = 0.08f,
+                    position = Vector2(0f, 160f),
+                    width = 0f,
+                    str = arrayOf(fps, "FPS")
+                )
+                HudObj.HUDText(
+                    this.font,
+                    this.hudBatch,
+                    fontSize = 0.08f,
+                    position = Vector2(0f, 150f),
+                    width = 0f,
+                    str = arrayOf("player:", "(${this.level.player.position.x.roundToInt()};${this.level.player.position.y.roundToInt()})")
+                )
+                HudObj.HUDText(
+                    this.font,
+                    this.hudBatch,
+                    fontSize = 0.08f,
+                    position = Vector2(0f, 140f),
+                    width = 0f,
+                    str = arrayOf(
+                        "camera:",
+                        "(${this.camera.position.x.roundToInt() - camera_startvalue()};${this.camera.position.y.roundToInt() - camera_startvalue()})",
+                    )
+                )
             }
         }
         this.hudBatch.end();
@@ -258,7 +402,7 @@ class GameScreen : Screen {
 
     override fun resume() {
         if (this.gameStates == GameStates.PAUSE_GAME) {
-            this.gameStates = GameStates.PAUSE_GAME;
+            this.gameStates = GameStates.PLAYING_GAME;
         }
 
         if (this.gameStates == GameStates.MENU && this.menu.menuState == Menu.MenuState.MENU_PAUSE) {

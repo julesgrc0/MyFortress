@@ -8,6 +8,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import java.io.File
 import java.lang.StringBuilder
+import java.util.*
 
 
 class Level() {
@@ -51,6 +52,16 @@ class Level() {
     fun loadTextures(textures: Array<Array<TextureRegion>>?)
     {
         this.textures = textures;
+
+        val t2 = this.textures?.get(14)?.get(15)
+        val t1 = this.textures?.get(15)?.get(15)
+
+        if(t1 != null&& t2 != null)
+        {
+            this.player.textures.add(t1)
+            this.player.textures.add(t2)
+        }
+
     }
 
     fun loadLevel(levelIndex: Int): Boolean {
@@ -61,47 +72,81 @@ class Level() {
         }
 
         val text = handle.readString();
-
         val lines = text.split("\n");
-
         var section_name: String = "";
-        for (line in lines) {
+        val variables = mutableListOf<Pair<String,String>>();
+
+        for (_line in lines) {
+            var line = _line.replace("\r","");
 
             if (!line.startsWith("#")) {
 
-                if (line.startsWith("[") && line.endsWith("]\r")) {
-                    line.replace("[", "")
-                    line.replace("]\r", "")
-                    line.toLowerCase();
+                if (line.startsWith("[") && line.endsWith("]")) {
+                    line=line.replace("[", "").replace("]", "").toLowerCase(Locale.getDefault());
                     section_name = line
-
                 } else if (section_name != "") {
                     if (line.startsWith("->")) {
                         val llist = line.split(":")
                         if (llist.size == 2) {
-                            llist[0].replace("->", "")
-                            llist[1].trim()
+                            val lname = llist[0].trim().replace("->","")
+                            var lvalue = llist[1].trim()
 
-                            val lname = llist[0]
-                            val lvalue = llist[1]
+                            if(lvalue.contains("$"))
+                            {
+                                for (v in variables)
+                                {
+                                    if(v.first == lvalue.replace("$",""))
+                                    {
+                                        lvalue = v.second;
+                                        break
+                                    }
+                                }
+                            }
 
                             if (section_name == "player") {
                                 when (lname) {
                                     "position" -> {
                                         val pos =
-                                            Vector2(lvalue.split(",")[0].toFloat(), lvalue.split(",")[1].toFloat())
-                                        //this.player.move(pos,this.batch,this.camera);
-                                    }
-                                    "direction" -> {
+                                            Vector2(
+                                                lvalue.split(",")[0].toFloat() * Tile.tile_size().x,
+                                                lvalue.split(",")[1].toFloat()* Tile.tile_size().y)
 
+                                        this.player.position = pos;
+                                    }
+                                    "speed" ->{
+                                        this.player.speed = lvalue.toFloat();
                                     }
                                 }
                             }
                         }
-                    } else if (line.startsWith("/")) {
+
+
+                    }
+                    else if (line.startsWith("/")) {
 
                         val parts = line.split(";").toMutableList();
-                        if (parts.size == 4) {
+                        if (parts.size == 3) {
+
+                            if(line.contains("$"))
+                            {
+                                var i =0;
+                                for(p in parts)
+                                {
+                                    if(p.startsWith("$"))
+                                    {
+                                        varloop@ for (v in variables)
+                                        {
+                                            if(v.first == p.replace("$",""))
+                                            {
+                                                parts[i] = v.second;
+                                                break@varloop
+                                            }
+                                        }
+                                    }
+                                    i++;
+                                }
+                            }
+
 
                             val pos = parts[0].replace("/", "").replace("(", "").replace(")", "").split(",")
                             val x = pos[0].toInt().toFloat() * Tile.tile_size().x;
@@ -110,8 +155,10 @@ class Level() {
 
                             val type: Tile.TileTypes = Tile.TileTypes.values()[parts[1].toInt()];
 
-                            val texturesX: Int = parts[2].toInt();
-                            val texturesY: Int = parts[3].replace("\r","").toInt();
+                            val textCoord = parts[2].trim().split(",")
+
+                            val texturesX: Int = textCoord[0].toInt();
+                            val texturesY: Int = textCoord[1].toInt();
 
                             val textureSize = (this.textures?.size ?: 16);
 
@@ -126,7 +173,7 @@ class Level() {
                             }
                             /*for (pair in this.textures) {
 
-                                if (pair.first.contentEquals(parts[2].replace("\r",""))) {
+                                if (pair.first.contentEquals(parts[2])) {
                                     val tile = Tile(Vector2(x, y), type, pair.second);
                                     this.tiles.add(tile)
 
@@ -135,6 +182,10 @@ class Level() {
                             }*/
                         }
                     }
+                }else if(line.startsWith("$"))
+                {
+                    val parts = line.replace("$","").split(":");
+                    variables.add(Pair( parts[0].trim(),parts[1].trim()))
                 }
             }
         }
