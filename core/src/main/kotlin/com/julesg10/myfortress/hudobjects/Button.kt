@@ -1,8 +1,6 @@
 package com.julesg10.myfortress.hudobjects
 
 import com.badlogic.gdx.Gdx
-import com.badlogic.gdx.graphics.Camera
-import com.badlogic.gdx.graphics.OrthographicCamera
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureRegion
@@ -12,7 +10,6 @@ import com.badlogic.gdx.utils.Align
 import com.julesg10.myfortress.AnimationController
 import com.julesg10.myfortress.GameScreen
 import com.julesg10.myfortress.InputController
-import com.julesg10.myfortress.gameobjects.GameObj
 
 
 class Button(position: Vector2,
@@ -47,6 +44,20 @@ class Button(position: Vector2,
     var eventClick = false;
 
     companion object {
+        fun positionManagement(position: Vector2, size: Vector2, sizeX: Int = 0, sizeY: Int = 0): Vector2 {
+            if (sizeX == 1) {
+                position.x -= size.x / 2
+            } else if (sizeX == 2) {
+                position.x += size.x / 2
+            }
+            if (sizeY == 1) {
+                position.y -= size.y / 2
+            } else if (sizeY == 2) {
+                position.y += size.y / 2
+            }
+            return position
+        }
+
         fun getSize(text: String, font: BitmapFont?): Vector2 {
             if (font != null) {
                 return Vector2((text.length + 20f) * 2f, (font.capHeight + 5f) * 2)
@@ -60,11 +71,11 @@ class Button(position: Vector2,
         }
 
         fun centerX(width: Float): Float {
-            return (GameScreen.world_width() / 2) - width
+            return (GameScreen.world_size().x / 2) - width
         }
 
         fun centerY(height: Float): Float {
-            return (GameScreen.world_height() / 2) - height
+            return (GameScreen.world_size().y / 2) - height
         }
     }
 
@@ -112,8 +123,8 @@ class Button(position: Vector2,
                 if(this.click(cameraPosition))
                 {
                     this.eventClick = true;
+                    this.activeState = true;
                 }
-                this.activeState = true;
             } else {
                 this.activeState = false;
             }
@@ -146,8 +157,7 @@ class Button(position: Vector2,
     }
 
     private fun click(camera: Vector2): Boolean {
-        var touch =
-            Vector2(GameScreen.width_pixel(Gdx.input.x), GameScreen.height_pixel(Gdx.graphics.height - Gdx.input.y));
+        var touch = GameScreen.pixel_to_worldValue(Vector2(Gdx.input.x.toFloat(), (Gdx.graphics.height - Gdx.input.y).toFloat()))
         touch = GameScreen.camera_target(touch, Vector3(camera, 0f));
 
         val touchSize = Vector2(10f, 10f)

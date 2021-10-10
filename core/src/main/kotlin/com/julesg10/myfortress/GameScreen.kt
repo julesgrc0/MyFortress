@@ -22,11 +22,11 @@ class GameScreen : Screen {
 
 
     private val camera: Camera = OrthographicCamera()
-    private val viewport = StretchViewport(world_width(), world_height(), camera)
+    private val viewport = StretchViewport(world_size().x, world_size().y, camera)
     private val batch = SpriteBatch()
 
     private val hudcamera: Camera = OrthographicCamera()
-    private val hudviewport = StretchViewport(world_width(), world_height(), hudcamera)
+    private val hudviewport = StretchViewport(world_size().x, world_size().y, hudcamera)
     private val hudBatch = SpriteBatch();
 
     private var font: BitmapFont? = null
@@ -42,6 +42,8 @@ class GameScreen : Screen {
     private var loadingTransition: AnimationTimer = AnimationTimer(5000f);
     private val loadingFrames = arrayOfNulls<TextureRegion>(9);
 
+    private val playerController : InputController = InputController(100f,true);
+
     enum class GameStates {
         LOADING_SCREEN,
         MENU,
@@ -51,49 +53,43 @@ class GameScreen : Screen {
     }
 
     companion object {
-        fun world_width(): Float = 160f
-        fun world_height(): Float = 160f
+        fun world_size(): Vector2 = Vector2(160f,208f)
 
-        fun height_pixel(pixel: Int): Float {
-            return (pixel * world_height() / Gdx.graphics.height)
-        }
-
-        fun height_world(pixel: Float): Int {
-            return (pixel * Gdx.graphics.height / world_height()).toInt()
-        }
-
-        fun width_pixel(pixel: Int): Float {
-            return (pixel * world_width() / Gdx.graphics.width)
-        }
-
-        fun width_world(pixel: Float): Int {
-            return (pixel * Gdx.graphics.width / world_width()).toInt()
-        }
-
-        fun size_world(pixel: Vector2): Vector2
+        fun percent_to_worldValue(size: Vector2): Vector2
         {
-            return Vector2(width_pixel(pixel.x.toInt()), height_pixel(pixel.y.toInt()))
+            return Vector2(size.x * world_size().x/100f,size.y * world_size().y/100f);
         }
 
-        fun default_fontscale() = 0.1f;
+        fun percent_to_pixel(size: Vector2): Vector2
+        {
+            return Vector2(size.x * Gdx.graphics.width/100f,size.y * Gdx.graphics.height/100f);
+        }
 
-        fun camera_centervalue() = 80f;
+        fun pixel_to_worldValue(pixel_v: Vector2): Vector2 {
+            return Vector2((pixel_v.x * world_size().x / Gdx.graphics.width),(pixel_v.y *  world_size().y / Gdx.graphics.height))
+        }
+
+        fun worldValue_to_pixel(world_v: Vector2): Vector2 {
+            return Vector2((world_v.x * Gdx.graphics.width/world_size().x ),(world_v.y * Gdx.graphics.height/world_size().y))
+        }
+
+        fun default_fontscale() = (world_size().x/world_size().y) / 10f;
+
+        fun camera_center()  = Vector2(world_size().x/2,world_size().y/2);
 
         fun camera_target(position: Vector2, cameraPosition: Vector3): Vector2 {
             return Vector2(
-                position.x + (cameraPosition.x - camera_centervalue()),
-                position.y + (cameraPosition.y - camera_centervalue())
+                position.x + (cameraPosition.x - camera_center().x),
+                position.y + (cameraPosition.y - camera_center().y)
             )
         }
 
         fun camera_target_static(position: Vector2, cameraPosition: Vector3): Vector2 {
             return Vector2(
-                (position.x + cameraPosition.x) - camera_centervalue(),
-                (position.y + cameraPosition.y) - camera_centervalue()
+                (position.x + cameraPosition.x) - camera_center().x,
+                (position.y + cameraPosition.y) - camera_center().y
             )
         }
-
-
 
         fun touchObject(
             objPosition: Vector2,
@@ -104,11 +100,12 @@ class GameScreen : Screen {
             roundToObj: Boolean
         ): Boolean {
 
-            var tx = (cameraPosition.x - camera_centervalue()) + width_pixel(touchPosition.x.toInt())
-            var ty = (cameraPosition.y - camera_centervalue()) + height_pixel(touchPosition.y.toInt())
+            val world_v =  pixel_to_worldValue(touchPosition)
+            var tx = (cameraPosition.x - camera_center().x) + world_v.x
+            var ty = (cameraPosition.y - camera_center().y) + world_v.y
 
-            val ox = (cameraPosition.x - camera_centervalue()) + objPosition.x
-            val oy = (cameraPosition.y - camera_centervalue()) + objPosition.y
+            val ox = (cameraPosition.x - camera_center().x) + objPosition.x
+            val oy = (cameraPosition.y - camera_center().y) + objPosition.y
 
             if(roundToObj)
             {
@@ -222,7 +219,7 @@ class GameScreen : Screen {
         }
     }
 
-    private val playerController : InputController = InputController(100f,true);
+
 
     fun playerCamera(delta: Float)
     {
@@ -234,7 +231,6 @@ class GameScreen : Screen {
 
         if (Gdx.input.isTouched) {
             val minValue = 2;
-            val moveTile = 16;
 
             val inpDX = Gdx.input.deltaX
             val inpDY = Gdx.input.deltaY
@@ -244,12 +240,12 @@ class GameScreen : Screen {
 
             if(abs(deltaX) >= minValue)
             {
-                deltaX = if(deltaX < 0) moveTile else -moveTile;
+                deltaX = if(deltaX < 0) Tile.tile_size().x.toInt() else -Tile.tile_size().x.toInt();
             }
 
             if(abs(deltaY) > minValue)
             {
-                deltaY = if(deltaY > 0) moveTile else -moveTile;
+                deltaY = if(deltaY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
             }
 
 
@@ -287,16 +283,17 @@ class GameScreen : Screen {
             this.camera.update()
 
             val isTouch = touchObject(
-                Vector2(16f, 0f),
+                Vector2(0f, 0f),
                 Tile.tile_size(),
                 Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()),
                 Tile.tile_size(),
                 this.camera.position,
                 false
             )
+
             if(isTouch)
             {
-                println("TILE CLICKED")
+                println("TILE (0,0) CLICKED")
             }
 
         }
@@ -313,10 +310,9 @@ class GameScreen : Screen {
         when (this.gameStates) {
             GameStates.LOADING_SCREEN -> {
                 val loadingTexture = this.loadingFrames[this.loadingAnimation?.getIndex()!!];
-                val w = width_pixel(128 * 4);
-                val h = height_pixel(128 * 4);
+                val loadingSize = percent_to_worldValue(Vector2(100f,100f)); //pixel_to_worldValue(Vector2(128 * 4f,128 * 4f));
 
-                this.batch.draw(loadingTexture, (160f - w) / 2, (160f - h) / 2, w, h);
+                this.batch.draw(loadingTexture, (world_size().x - loadingSize.x) / 2, (world_size().y - loadingSize.y) / 2, loadingSize.x, loadingSize.y);
             }
             GameStates.PLAYING_GAME -> {
                 this.level.render(this.batch);
@@ -324,6 +320,7 @@ class GameScreen : Screen {
             GameStates.PAUSE_GAME -> {
 
                 this.level.render(this.batch, true);
+
             }
         }
         this.batch.end();
@@ -339,7 +336,7 @@ class GameScreen : Screen {
                     this.font,
                     this.hudBatch,
                     fontSize = 0.08f,
-                    position = Vector2(0f, 160f),
+                    position = Vector2(0f, world_size().y),
                     width = 0f,
                     str = arrayOf(fps, "FPS")
                 )
@@ -347,7 +344,7 @@ class GameScreen : Screen {
                     this.font,
                     this.hudBatch,
                     fontSize = 0.08f,
-                    position = Vector2(0f, 150f),
+                    position = Vector2(0f, world_size().y-10f),
                     width = 0f,
                     str = arrayOf("player:", "(${this.level.player.position.x.roundToInt()};${this.level.player.position.y.roundToInt()})")
                 )
@@ -355,11 +352,11 @@ class GameScreen : Screen {
                     this.font,
                     this.hudBatch,
                     fontSize = 0.08f,
-                    position = Vector2(0f, 140f),
+                    position = Vector2(0f, world_size().y - 20f),
                     width = 0f,
                     str = arrayOf(
                         "camera:",
-                        "(${this.camera.position.x.roundToInt() - camera_centervalue()};${this.camera.position.y.roundToInt() - camera_centervalue()})",
+                        "(${this.camera.position.x.roundToInt() - camera_center().x};${this.camera.position.y.roundToInt() - camera_center().y})",
                     )
                 )
             }

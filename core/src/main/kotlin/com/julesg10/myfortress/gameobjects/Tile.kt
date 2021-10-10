@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.julesg10.myfortress.GameScreen
 
 class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(position) {
 
@@ -15,7 +16,7 @@ class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(
     var rotation: Float = 0f;
 
     companion object {
-        fun tile_size() = Vector2(16f, 16f);
+        fun tile_size() = GameScreen.percent_to_worldValue(Vector2(10f,10f));
     }
 
     init {

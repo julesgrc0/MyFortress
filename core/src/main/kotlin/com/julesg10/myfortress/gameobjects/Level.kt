@@ -54,19 +54,19 @@ class Level() {
         this.textures = textures;
 
         // default
-        this.playerTexture(Pair(14,15), Pair(15,15))
+        this.playerTexture(arrayListOf(Pair(14,15), Pair(15,15)))
     }
 
-    private fun playerTexture(t1_index : Pair<Int,Int>,t2_index: Pair<Int,Int>)
+    private fun playerTexture(textures_pairs : List<Pair<Int,Int>>)
     {
-        val t2 = this.textures?.get(t1_index.first)?.get(t1_index.second)
-        val t1 = this.textures?.get(t2_index.first)?.get(t2_index.second)
-
-        if(t1 != null&& t2 != null)
+        this.player.textures.clear()
+        for(pair in textures_pairs)
         {
-            this.player.textures.clear()
-            this.player.textures.add(t1)
-            this.player.textures.add(t2)
+            val t = this.textures?.get(pair.first)?.get(pair.second)
+            if(t != null)
+            {
+                this.player.textures.add(t)
+            }
         }
     }
 
@@ -124,12 +124,15 @@ class Level() {
                                     }
                                     "skin"->{
                                         val tex = lvalue.split(",")
-                                        if(tex.size == 4)
+                                        if(tex.size%2 == 0)
                                         {
-                                            val p1Index = Pair<Int,Int>(tex[0].toInt(),tex[1].toInt())
-                                            val p2Index = Pair<Int,Int>(tex[2].toInt(),tex[3].toInt())
-
-                                            this.playerTexture(p1Index,p2Index);
+                                            val listIndex = mutableListOf<Pair<Int,Int>>()
+                                            for(i in 0 until tex.size step 2)
+                                            {
+                                                val pIndex = Pair<Int,Int>(tex[i].toInt(),tex[i+1].toInt())
+                                                listIndex.add(pIndex)
+                                            }
+                                            this.playerTexture(listIndex);
                                         }
                                     }
                                 }
@@ -166,7 +169,7 @@ class Level() {
 
                             val pos = parts[0].replace("/", "").replace("(", "").replace(")", "").split(",")
                             val x = pos[0].toInt().toFloat() * Tile.tile_size().x;
-                            val y = pos[1].toInt().toFloat() * Tile.tile_size().x;
+                            val y = pos[1].toInt().toFloat() * Tile.tile_size().y;
 
 
                             val type: Tile.TileTypes = Tile.TileTypes.values()[parts[1].toInt()];

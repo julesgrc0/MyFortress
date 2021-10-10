@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.BitmapFont
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
+import com.julesg10.myfortress.GameScreen
 
 class Menu(position: Vector2,font: BitmapFont?) : HudObj(position) {
     private val btnList: MutableList<Pair<Button, String>> = mutableListOf();
@@ -36,11 +37,12 @@ class Menu(position: Vector2,font: BitmapFont?) : HudObj(position) {
         val activeBtnTextures = mutableListOf<TextureRegion>()
         activeBtnTextures.addAll(btnTexturesList)
 
+        val btnStartSize = Button.getSize("Start", this.font);
         this.btnList.add(
             Pair(
                 Button(
-                    Vector2(60f, 10f),
-                    Button.getSize("Start", this.font),
+                    Button.positionManagement(GameScreen.percent_to_worldValue(Vector2(50f,5f)),btnStartSize,1,2),
+                    btnStartSize,
                     "Start",
                     "GO",
                     btnTexturesList,
@@ -70,7 +72,7 @@ class Menu(position: Vector2,font: BitmapFont?) : HudObj(position) {
                     pBtn.first.eventClick = false;
                     when (pBtn.second) {
                         "start_btn" -> {
-                            println(pBtn.first.clickCount())
+                            //println(pBtn.first.clickCount())
                             this.menuState = MenuState.START_GAME;
                         }
                     }

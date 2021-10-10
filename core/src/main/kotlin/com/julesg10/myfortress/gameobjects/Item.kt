@@ -16,7 +16,8 @@ class Item(position: Vector2,type: ItemTypes,texture: TextureRegion) : GameObj(p
     init {
         this.type = type
         this.texture = texture;
-        this.size = Vector2(GameScreen.width_pixel(texture.regionWidth),GameScreen.height_pixel(texture.regionHeight))
+
+        this.size = GameScreen.pixel_to_worldValue(Vector2(texture.regionWidth.toFloat(), texture.regionHeight.toFloat()))
     }
 
     enum class ItemTypes {
