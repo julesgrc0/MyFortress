@@ -6,7 +6,11 @@
 
 # player vars
 $p_default: 0,0
-$p_speed: 8f
+$p_speed: 40f
+# player textures (helmet) <y;x> (armor) <y;x>
+$p_textures_blue: 14,14,15,14
+$p_textures_green: 14,13,15,13
+$p_villager: 15,0,15,8
 
 # textures vars
 $floor: 2,3
@@ -23,6 +27,7 @@ $wall_flag_yellow: 14,4
 [Player]
 ->position: $p_default
 ->speed: $p_speed
+->skin: $p_villager
 
 [Level]
 ->tiles: 4

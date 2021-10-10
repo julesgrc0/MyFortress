@@ -53,15 +53,21 @@ class Level() {
     {
         this.textures = textures;
 
-        val t2 = this.textures?.get(14)?.get(15)
-        val t1 = this.textures?.get(15)?.get(15)
+        // default
+        this.playerTexture(Pair(14,15), Pair(15,15))
+    }
+
+    private fun playerTexture(t1_index : Pair<Int,Int>,t2_index: Pair<Int,Int>)
+    {
+        val t2 = this.textures?.get(t1_index.first)?.get(t1_index.second)
+        val t1 = this.textures?.get(t2_index.first)?.get(t2_index.second)
 
         if(t1 != null&& t2 != null)
         {
+            this.player.textures.clear()
             this.player.textures.add(t1)
             this.player.textures.add(t2)
         }
-
     }
 
     fun loadLevel(levelIndex: Int): Boolean {
@@ -115,6 +121,16 @@ class Level() {
                                     }
                                     "speed" ->{
                                         this.player.speed = lvalue.toFloat();
+                                    }
+                                    "skin"->{
+                                        val tex = lvalue.split(",")
+                                        if(tex.size == 4)
+                                        {
+                                            val p1Index = Pair<Int,Int>(tex[0].toInt(),tex[1].toInt())
+                                            val p2Index = Pair<Int,Int>(tex[2].toInt(),tex[3].toInt())
+
+                                            this.playerTexture(p1Index,p2Index);
+                                        }
                                     }
                                 }
                             }

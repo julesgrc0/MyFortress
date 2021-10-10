@@ -77,21 +77,23 @@ class GameScreen : Screen {
 
         fun default_fontscale() = 0.1f;
 
-        fun camera_startvalue() = 80f;
+        fun camera_centervalue() = 80f;
 
         fun camera_target(position: Vector2, cameraPosition: Vector3): Vector2 {
             return Vector2(
-                position.x + (cameraPosition.x - camera_startvalue()),
-                position.y + (cameraPosition.y - camera_startvalue())
+                position.x + (cameraPosition.x - camera_centervalue()),
+                position.y + (cameraPosition.y - camera_centervalue())
             )
         }
 
         fun camera_target_static(position: Vector2, cameraPosition: Vector3): Vector2 {
             return Vector2(
-                (position.x + cameraPosition.x) - camera_startvalue(),
-                (position.y + cameraPosition.y) - camera_startvalue()
+                (position.x + cameraPosition.x) - camera_centervalue(),
+                (position.y + cameraPosition.y) - camera_centervalue()
             )
         }
+
+
 
         fun touchObject(
             objPosition: Vector2,
@@ -101,37 +103,26 @@ class GameScreen : Screen {
             cameraPosition: Vector3,
             roundToObj: Boolean
         ): Boolean {
-            var roundX: Float = (width_pixel(touchPosition.x.toInt()) / objSize.x).roundToInt() * objSize.x;
-            var roundY: Float =
-                ((world_height() - height_pixel(touchPosition.y.toInt())) / objSize.y).roundToInt() * objSize.y;
 
-            if (!roundToObj) {
-                roundX = width_pixel(touchPosition.x.toInt())
-                roundY = world_height() - height_pixel(touchPosition.y.toInt())
+            var tx = (cameraPosition.x - camera_centervalue()) + width_pixel(touchPosition.x.toInt())
+            var ty = (cameraPosition.y - camera_centervalue()) + height_pixel(touchPosition.y.toInt())
+
+            val ox = (cameraPosition.x - camera_centervalue()) + objPosition.x
+            val oy = (cameraPosition.y - camera_centervalue()) + objPosition.y
+
+            if(roundToObj)
+            {
+                tx  = (tx/objSize.x).roundToInt() * objSize.x
+                ty  = (ty/objSize.y).roundToInt() * objSize.y
             }
 
-            val obj = Vector2((objPosition.x + cameraPosition.x) - 80f, (objPosition.y + cameraPosition.y) - 80f);
-
-            val touch = size_world(camera_target(Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()),cameraPosition))
-            touch.x -= cameraPosition.x
-            touch.y -= cameraPosition.y
-
-            obj.x = obj.x.roundToInt().toFloat()
-            obj.y = obj.x.roundToInt().toFloat()
-
-            touch.x = touch.x.roundToInt().toFloat()
-            touch.y = touch.x.roundToInt().toFloat()
-
-            println("${obj.x} == ${touch.x} && ${obj.y} == ${touch.y}")
-
-            if (obj.x < touch.x + objSize.x &&
-                obj.x + objSize.x > touch.x &&
-                obj.y < touch.y + objSize.y &&
-                obj.y + objSize.y > touch.y
-            ) {
+            if (ox < tx + touchSize.x &&
+                ox + objSize.x > tx &&
+                oy < ty + touchSize.y &&
+                oy + objSize.y > ty)
+            {
                 return true;
             }
-
             return false;
         }
 
@@ -238,59 +229,50 @@ class GameScreen : Screen {
         val state = this.playerController.isActive(delta) {
             return@isActive Gdx.input.isTouched;
         }
-        if(state == InputController.InputStates.HOVER)
+        if(state == InputController.InputStates.CLICK)
         {
-        val speed = delta * this.level.player.speed
+
         if (Gdx.input.isTouched) {
-            val maxMove = 20;
-            val replaceMoveValue = 15;
+            val minValue = 2;
+            val moveTile = 16;
 
-            var deltaX = Gdx.input.deltaX
-            var deltaY = Gdx.input.deltaY
+            val inpDX = Gdx.input.deltaX
+            val inpDY = Gdx.input.deltaY
 
-            if(abs(deltaX) >= maxMove)
+            var deltaX = inpDX
+            var deltaY = inpDY
+
+            if(abs(deltaX) >= minValue)
             {
-                    if(deltaX > 0)
-                    {
-                        deltaX = replaceMoveValue;
-                    }else{
-                        deltaX = -replaceMoveValue;
-                    }
+                deltaX = if(deltaX < 0) moveTile else -moveTile;
             }
 
-            if(abs(deltaY) >= maxMove)
+            if(abs(deltaY) > minValue)
             {
-                if(deltaY > 0)
-                {
-                    deltaY = replaceMoveValue;
-                }else{
-                    deltaY = -replaceMoveValue;
-                }
+                deltaY = if(deltaY > 0) moveTile else -moveTile;
             }
 
 
-
-            if(abs(deltaX) > abs(deltaY))
+            if(abs(inpDX) > abs(inpDY))
             {
-                if(deltaX < 0)
+                if(deltaX > 0)
                 {
                     this.level.player.direction = Direction.LEFT
                 }else{
                     this.level.player.direction = Direction.RIGHT
                 }
-                this.level.player.position.x -= (deltaX * speed)
+                this.level.player.requestPosition.x += deltaX
             }else{
-                this.level.player.position.y += (deltaY * speed)
+                this.level.player.requestPosition.y += deltaY
             }
         }
 
-        /*val deltaXCam = (this.camera.position.x-80f) - (this.level.player.position.x/Tile.tile_size().x).roundToInt()*Tile.tile_size().x;
-        val deltaYCam = (this.camera.position.y-80f) - (this.level.player.position.y/Tile.tile_size().y).roundToInt()*Tile.tile_size().y;
-        */
+
+
+        }
 
         this.camera.position.set(Vector3( this.level.player.position.x,this.level.player.position.y , this.camera.position.z));
         this.camera.update()
-        }
     }
 
     fun debugCamera(delta: Float) {
@@ -305,15 +287,18 @@ class GameScreen : Screen {
             this.camera.update()
 
             val isTouch = touchObject(
-                Vector2(0f, 0f),
+                Vector2(16f, 0f),
                 Tile.tile_size(),
                 Vector2(Gdx.input.x.toFloat(), Gdx.input.y.toFloat()),
                 Tile.tile_size(),
                 this.camera.position,
                 false
             )
+            if(isTouch)
+            {
+                println("TILE CLICKED")
+            }
 
-            println("$isTouch")
         }
     }
 
@@ -374,7 +359,7 @@ class GameScreen : Screen {
                     width = 0f,
                     str = arrayOf(
                         "camera:",
-                        "(${this.camera.position.x.roundToInt() - camera_startvalue()};${this.camera.position.y.roundToInt() - camera_startvalue()})",
+                        "(${this.camera.position.x.roundToInt() - camera_centervalue()};${this.camera.position.y.roundToInt() - camera_centervalue()})",
                     )
                 )
             }

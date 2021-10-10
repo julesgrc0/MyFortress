@@ -9,42 +9,37 @@ import kotlin.math.roundToInt
 
 class Player(position: Vector2): GameObj(position) {
 
-    var speed: Float = 8f;
-    val size = Tile.tile_size();
+    var speed: Float = 40f;
     var textures = mutableListOf<TextureRegion>();
     var direction: Direction = Direction.LEFT
     private var textureDirection: Direction = Direction.LEFT;
+    val requestPosition = position;
 
-
-    fun move(position: Vector2, camera: Camera) {
-        this.position = position;
-        val x = (camera.viewportWidth - this.size.x) / 2;
-        val y = (camera.viewportHeight - this.size.y) / 2;
-
-        camera.position.set(camera.position.x + x, camera.position.y + y, camera.position.z);
-        camera.update();
-
+    private fun flip()
+    {
+        if(this.textureDirection != this.direction)
+        {
+            for(texture in textures)
+            {
+                texture.flip(true,false);
+            }
+            this.textureDirection = this.direction;
+        }
     }
 
     override fun render(batch: Batch) {
         var i = this.textures.size;
 
+        /*
         val x = (this.position.x/Tile.tile_size().x).roundToInt()*Tile.tile_size().x;
         val y = (this.position.y/Tile.tile_size().y).roundToInt()*Tile.tile_size().y;
+        */
+        val x = this.position.x
+        val y = this.position.y
 
         for (texture in textures)
         {
-            if(this.direction == Direction.LEFT && this.textureDirection != this.direction)
-            {
-                texture.flip(true,false);
-                this.textureDirection = this.direction;
-            }
-
-           else if(this.direction == Direction.RIGHT && this.textureDirection != this.direction)
-            {
-                texture.flip(true,false);
-                this.textureDirection = this.direction;
-            }
+            this.flip()
 
             i --;
             batch.draw(texture, x , y - (i * Tile.tile_size().y), 0f, 0f, Tile.tile_size().x, Tile.tile_size().y, 1f, 1f, 0f);
@@ -52,6 +47,30 @@ class Player(position: Vector2): GameObj(position) {
     }
 
     fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>): MutableList<Tile> {
+        if(this.requestPosition != this.position)
+        {
+            val margin = 1f;
+            val move =  delta * this.speed;
+            if(this.requestPosition.x > this.position.x + margin)
+            {
+                this.position.x += move
+            }else if(this.requestPosition.x + margin < this.position.x)
+            {
+                this.position.x -= move
+            }else{
+                this.position.x = this.requestPosition.x;
+            }
+
+            if(this.requestPosition.y > this.position.y + margin)
+            {
+                this.position.y += move
+            }else if(this.requestPosition.y + margin < this.position.y)
+            {
+                this.position.y -= move
+            }else{
+                this.position.y = this.requestPosition.y;
+            }
+        }
         return tiles;
     }
 }
