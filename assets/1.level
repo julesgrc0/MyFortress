@@ -24,12 +24,15 @@ $wall_flag_red: 12,4
 $wall_flag_green: 13,4
 $wall_flag_yellow: 14,4
 
+$gaint_sword: 8,3,8,2
+
 [Player]
 ->position: $p_default
 ->speed: $p_speed
 ->skin: $p_textures_blue
 
-[Level]
+[LevelTiles]
+
 ->tiles: 4
 
 /0,-1;2;$floor
@@ -73,4 +76,7 @@ $wall_flag_yellow: 14,4
 /6,1;2;$floor
 /6,2;2;$floor
 /6,3;2;$wall_end
+
+[LevelItems]
+/0,0;1;$gaint_sword
 

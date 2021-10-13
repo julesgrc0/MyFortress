@@ -42,7 +42,7 @@ class GameScreen : Screen {
     private var loadingTransition: AnimationTimer = AnimationTimer(5000f);
     private val loadingFrames = arrayOfNulls<TextureRegion>(9);
 
-    private val playerController : InputController = InputController(100f,true);
+
 
     enum class GameStates {
         LOADING_SCREEN,
@@ -213,7 +213,6 @@ class GameScreen : Screen {
             }
             GameStates.PLAYING_GAME -> {
                 //this.debugCamera(delta)
-                this.playerCamera(delta);
                 this.level.update(delta, this.camera);
             }
         }
@@ -221,55 +220,7 @@ class GameScreen : Screen {
 
 
 
-    fun playerCamera(delta: Float)
-    {
-        val state = this.playerController.isActive(delta) {
-            return@isActive Gdx.input.isTouched;
-        }
-        if(state == InputController.InputStates.CLICK)
-        {
 
-        if (Gdx.input.isTouched) {
-            val minValue = 2;
-
-            val inpDX = Gdx.input.deltaX
-            val inpDY = Gdx.input.deltaY
-
-            var deltaX = inpDX
-            var deltaY = inpDY
-
-            if(abs(deltaX) >= minValue)
-            {
-                deltaX = if(deltaX < 0) Tile.tile_size().x.toInt() else -Tile.tile_size().x.toInt();
-            }
-
-            if(abs(deltaY) > minValue)
-            {
-                deltaY = if(deltaY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
-            }
-
-
-            if(abs(inpDX) > abs(inpDY))
-            {
-                if(deltaX > 0)
-                {
-                    this.level.player.direction = Direction.LEFT
-                }else{
-                    this.level.player.direction = Direction.RIGHT
-                }
-                this.level.player.requestPosition.x += deltaX
-            }else{
-                this.level.player.requestPosition.y += deltaY
-            }
-        }
-
-
-
-        }
-
-        this.camera.position.set(Vector3( this.level.player.position.x,this.level.player.position.y , this.camera.position.z));
-        this.camera.update()
-    }
 
     fun debugCamera(delta: Float) {
         if (Gdx.input.isTouched) {

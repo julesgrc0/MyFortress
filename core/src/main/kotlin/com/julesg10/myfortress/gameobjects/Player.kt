@@ -1,10 +1,13 @@
 package com.julesg10.myfortress.gameobjects
 
+import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.julesg10.myfortress.InputController
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 class Player(position: Vector2): GameObj(position) {
@@ -13,7 +16,58 @@ class Player(position: Vector2): GameObj(position) {
     var textures = mutableListOf<TextureRegion>();
     var direction: Direction = Direction.LEFT
     private var textureDirection: Direction = Direction.LEFT;
+    private val playerController : InputController = InputController(100f,true);
     val requestPosition = position;
+
+    private fun playerCamera(delta: Float,camera: Camera)
+    {
+        val state = this.playerController.isActive(delta) {
+            return@isActive Gdx.input.isTouched;
+        }
+        if(state == InputController.InputStates.CLICK)
+        {
+
+            if (Gdx.input.isTouched) {
+                val minValue = 2;
+
+                val inpDX = Gdx.input.deltaX
+                val inpDY = Gdx.input.deltaY
+
+                var deltaX = inpDX
+                var deltaY = inpDY
+
+                if(abs(deltaX) >= minValue)
+                {
+                    deltaX = if(deltaX < 0) Tile.tile_size().x.toInt() else -Tile.tile_size().x.toInt();
+                }
+
+                if(abs(deltaY) > minValue)
+                {
+                    deltaY = if(deltaY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
+                }
+
+
+                if(abs(inpDX) > abs(inpDY))
+                {
+                    if(deltaX > 0)
+                    {
+                        this.direction = Direction.LEFT
+                    }else{
+                        this.direction = Direction.RIGHT
+                    }
+                    this.requestPosition.x += deltaX
+                }else{
+                    this.requestPosition.y += deltaY
+                }
+            }
+
+
+
+        }
+
+        camera.position.set(Vector3( this.position.x,this.position.y , camera.position.z));
+        camera.update()
+    }
 
     private fun flip()
     {
@@ -46,7 +100,10 @@ class Player(position: Vector2): GameObj(position) {
         }
     }
 
-    fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>): MutableList<Tile> {
+
+    fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>, items: MutableList<Item>) {
+        this.playerCamera(delta,camera);
+
         if(this.requestPosition != this.position)
         {
             val margin = 1f;
@@ -71,6 +128,6 @@ class Player(position: Vector2): GameObj(position) {
                 this.position.y = this.requestPosition.y;
             }
         }
-        return tiles;
+
     }
 }
