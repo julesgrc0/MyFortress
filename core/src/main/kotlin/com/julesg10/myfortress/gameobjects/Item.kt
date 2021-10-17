@@ -7,15 +7,13 @@ import com.badlogic.gdx.math.Vector2
 import com.julesg10.myfortress.GameScreen
 
 class Item(position: Vector2,type: ItemTypes,textures: List<TextureRegion>) : GameObj(position) {
-    private var type: ItemTypes = ItemTypes.FIX;
+    val type: ItemTypes = type;
     private var textures: List<TextureRegion> = textures;
     private var size: Vector2;
     var rotation: Float = 0f;
 
 
     init {
-        this.type = type
-
        //GameScreen.pixel_to_worldValue(Vector2(texture.regionWidth.toFloat(), texture.regionHeight.toFloat()))
         this.size = Vector2(Tile.tile_size().x * 0.8f,Tile.tile_size().y* 0.8f)
     }

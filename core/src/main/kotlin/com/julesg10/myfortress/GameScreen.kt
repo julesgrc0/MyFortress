@@ -53,7 +53,7 @@ class GameScreen : Screen {
     }
 
     companion object {
-        fun world_size(): Vector2 = Vector2(160f,208f)
+        fun world_size(): Vector2 = Vector2(160f,160f)
 
         fun percent_to_worldValue(size: Vector2): Vector2
         {
@@ -310,6 +310,15 @@ class GameScreen : Screen {
                         "(${this.camera.position.x.roundToInt() - camera_center().x};${this.camera.position.y.roundToInt() - camera_center().y})",
                     )
                 )
+                HudObj.HUDText(this.font,
+                    this.hudBatch,
+                    fontSize = 0.08f,
+                    position = Vector2(0f, world_size().y - 30f),
+                    width = 0f,
+                    str = arrayOf(
+                        "inventory:",
+                        "${this.level.player.getInventory().size}",
+                    ))
             }
         }
         this.hudBatch.end();

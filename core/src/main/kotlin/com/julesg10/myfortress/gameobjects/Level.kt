@@ -123,8 +123,8 @@ class Level() {
                             }
 
                             val pos = parts[0].replace("/", "").replace("(", "").replace(")", "").split(",")
-                            val x = pos[0].toInt().toFloat() * Tile.tile_size().x;
-                            val y = pos[1].toInt().toFloat() * Tile.tile_size().y;
+                            val x = pos[0].toInt() * Tile.tile_size().x;
+                            val y = pos[1].toInt() * Tile.tile_size().y;
 
                             val type: Int = parts[1].toInt()
 
@@ -149,6 +149,7 @@ class Level() {
                                     if (section_name == "leveltiles") {
                                         val tile =
                                             Tile(Vector2(x, y), Tile.TileTypes.values()[type], localTextures.get(0));
+
                                         this.tiles.add(tile)
                                     } else if (section_name == "levelitems") {
                                         val item = Item(Vector2(x, y), Item.ItemTypes.values()[type], localTextures);

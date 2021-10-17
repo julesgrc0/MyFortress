@@ -6,9 +6,9 @@ import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
+import com.julesg10.myfortress.GameScreen
 import com.julesg10.myfortress.InputController
 import kotlin.math.abs
-import kotlin.math.roundToInt
 
 class Player(position: Vector2): GameObj(position) {
 
@@ -18,16 +18,19 @@ class Player(position: Vector2): GameObj(position) {
     private var textureDirection: Direction = Direction.LEFT;
     private val playerController : InputController = InputController(100f,true);
     val requestPosition = position;
+    private val inventory = mutableListOf<Item>();
 
-    private fun playerCamera(delta: Float,camera: Camera)
+    private fun playerCamera(delta: Float,camera: Camera, tiles: MutableList<Tile>)
     {
         val state = this.playerController.isActive(delta) {
             return@isActive Gdx.input.isTouched;
         }
+
         if(state == InputController.InputStates.CLICK)
         {
 
-            if (Gdx.input.isTouched) {
+            if (this.requestPosition == this.position) //Gdx.input.isTouched
+            {
                 val minValue = 2;
 
                 val inpDX = Gdx.input.deltaX
@@ -46,8 +49,8 @@ class Player(position: Vector2): GameObj(position) {
                     deltaY = if(deltaY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
                 }
 
-
-                if(abs(inpDX) > abs(inpDY))
+                val moveX = abs(inpDX) > abs(inpDY)
+                if(moveX)
                 {
                     if(deltaX > 0)
                     {
@@ -55,17 +58,32 @@ class Player(position: Vector2): GameObj(position) {
                     }else{
                         this.direction = Direction.RIGHT
                     }
+
                     this.requestPosition.x += deltaX
                 }else{
                     this.requestPosition.y += deltaY
                 }
+
+                for (tile in tiles)
+                {
+                    if(tile.position == Vector2(this.requestPosition.x,this.requestPosition.y-Tile.tile_size().y))
+                    {
+                        if(tile.type == Tile.TileTypes.WALL)
+                        {
+                            if(moveX)
+                            {
+                                this.requestPosition.x -= deltaX;
+                            }else{
+                                this.requestPosition.y -= deltaY;
+                            }
+                        }
+                    }
+                }
             }
-
-
 
         }
 
-        camera.position.set(Vector3( this.position.x,this.position.y , camera.position.z));
+        camera.position.set(Vector3(this.position.x, this.position.y , camera.position.z));
         camera.update()
     }
 
@@ -102,7 +120,7 @@ class Player(position: Vector2): GameObj(position) {
 
 
     fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>, items: MutableList<Item>) {
-        this.playerCamera(delta,camera);
+        this.playerCamera(delta,camera,tiles);
 
         if(this.requestPosition != this.position)
         {
@@ -129,5 +147,21 @@ class Player(position: Vector2): GameObj(position) {
             }
         }
 
+        var i = 0;
+        val tmpItems = items.toList();
+        for(item in tmpItems)
+        {
+            if(item.position == this.requestPosition && item.type == Item.ItemTypes.COLLECT)
+            {
+                this.inventory.add(item);
+                items.removeAt(i);
+                i--;
+            }
+            i++;
+        }
+    }
+
+    fun getInventory():List<Item>{
+        return this.inventory.toList();
     }
 }

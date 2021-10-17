@@ -11,7 +11,7 @@ import com.julesg10.myfortress.GameScreen
 
 class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(position) {
 
-    private var type: TileTypes = TileTypes.FLOOR;
+    val type: TileTypes = type;
     private var texture: TextureRegion;
     var rotation: Float = 0f;
 
@@ -20,7 +20,6 @@ class Tile(position: Vector2,type : TileTypes,texture: TextureRegion) : GameObj(
     }
 
     init {
-        this.type = type
         this.texture = texture;
     }
 
