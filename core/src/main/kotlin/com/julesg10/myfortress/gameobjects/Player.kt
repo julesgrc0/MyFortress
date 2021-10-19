@@ -6,7 +6,7 @@ import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
-import com.julesg10.myfortress.GameScreen
+import com.julesg10.myfortress.DoubleController
 import com.julesg10.myfortress.InputController
 import kotlin.math.abs
 
@@ -16,41 +16,67 @@ class Player(position: Vector2): GameObj(position) {
     var textures = mutableListOf<TextureRegion>();
     var direction: Direction = Direction.LEFT
     private var textureDirection: Direction = Direction.LEFT;
-    private val playerController : InputController = InputController(100f,true);
+
+    private val moveClickController : InputController = InputController(100f,true);
+    private val itemDoubleClickController : DoubleController = DoubleController(30f,1f, 10f);
+    private var showItem = false;
+    private var itemIndex = 0;
+
     val requestPosition = position;
     private val inventory = mutableListOf<Item>();
 
-    private fun playerCamera(delta: Float,camera: Camera, tiles: MutableList<Tile>)
+    private fun itemAction(delta:Float,items: MutableList<Item>)
     {
-        val state = this.playerController.isActive(delta) {
+        val state = this.itemDoubleClickController.isActive(delta);
+        if(state == InputController.InputStates.DOUBLE_CLICK)
+        {
+            if(this.showItem)
+            {
+                this.itemIndex++;
+            }else{
+                this.showItem = true;
+            }
+
+            if(this.itemIndex >= this.inventory.size)
+            {
+                this.showItem = !this.showItem;
+                this.itemIndex = 0;
+            }
+        }
+    }
+
+    private fun playerCamera(delta: Float,camera: Camera, tiles: MutableList<Tile>): Boolean
+    {
+
+        val state = this.moveClickController.isActive(delta) {
             return@isActive Gdx.input.isTouched;
         }
 
         if(state == InputController.InputStates.CLICK)
         {
-
             if (this.requestPosition == this.position) //Gdx.input.isTouched
             {
-                val minValue = 2;
+                val minValue = 4;
 
                 val inpDX = Gdx.input.deltaX
                 val inpDY = Gdx.input.deltaY
-
-                var deltaX = inpDX
-                var deltaY = inpDY
-
-                if(abs(deltaX) >= minValue)
-                {
-                    deltaX = if(deltaX < 0) Tile.tile_size().x.toInt() else -Tile.tile_size().x.toInt();
-                }
-
-                if(abs(deltaY) > minValue)
-                {
-                    deltaY = if(deltaY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
-                }
-
                 val moveX = abs(inpDX) > abs(inpDY)
-                if(moveX)
+
+                var deltaX = 0
+                var deltaY = 0
+
+                if(abs(inpDX) >= minValue)
+                {
+                    deltaX = if(inpDX < 0) Tile.tile_size().x.toInt() else -Tile.tile_size().x.toInt();
+                }
+
+                if(abs(inpDY) > minValue)
+                {
+                    deltaY = if(inpDY > 0) Tile.tile_size().y.toInt() else -Tile.tile_size().y.toInt();
+                }
+
+
+                if(moveX && (deltaX != 0 || deltaY != 0))
                 {
                     if(deltaX > 0)
                     {
@@ -73,11 +99,18 @@ class Player(position: Vector2): GameObj(position) {
                             if(moveX)
                             {
                                 this.requestPosition.x -= deltaX;
+                                return false;
                             }else{
                                 this.requestPosition.y -= deltaY;
+                                return false;
                             }
                         }
                     }
+                }
+
+                if(deltaX != 0 || deltaY != 0)
+                {
+                    return true;
                 }
             }
 
@@ -85,6 +118,8 @@ class Player(position: Vector2): GameObj(position) {
 
         camera.position.set(Vector3(this.position.x, this.position.y , camera.position.z));
         camera.update()
+
+        return false;
     }
 
     private fun flip()
@@ -116,11 +151,22 @@ class Player(position: Vector2): GameObj(position) {
             i --;
             batch.draw(texture, x , y - (i * Tile.tile_size().y), 0f, 0f, Tile.tile_size().x, Tile.tile_size().y, 1f, 1f, 0f);
         }
+
+        if(this.showItem)
+        {
+            this.inventory[this.itemIndex].renderOnPlayer(batch,this.position,this.direction == Direction.LEFT);
+        }
     }
 
 
     fun update(delta: Float, camera: Camera, tiles: MutableList<Tile>, items: MutableList<Item>) {
-        this.playerCamera(delta,camera,tiles);
+        if(!this.playerCamera(delta,camera,tiles))
+        {
+            this.itemAction(delta,items);
+        }else{
+            this.itemDoubleClickController.reset()
+        }
+
 
         if(this.requestPosition != this.position)
         {
