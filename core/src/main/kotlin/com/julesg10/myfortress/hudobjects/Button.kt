@@ -31,12 +31,13 @@ class Button(position: Vector2,
     private val active: List<TextureRegion> = active;
 
     private val defaultAnimation = AnimationController(10, default.size, -1);
-    private val activeAnimation = AnimationController(10, active.size, -1)
+    private val hoverAnimation = AnimationController(10, active.size, -1)
 
     private var clickCount: Int = 0;
-    private val clickController = InputController(10f, true);
+    private val clickController = InputController(0f, true);
 
-    private var activeState: Boolean = false;
+    private var hoverState: Boolean = false;
+
     private var fontScale: Float = 0f;
     private var fontSize: Float = fontSize;
     private var yText: Float = 0f;
@@ -95,9 +96,9 @@ class Button(position: Vector2,
     }
 
     override fun render(hudBatch: Batch) {
-        if (this.activeState) {
+        if (this.hoverState) {
             hudBatch.draw(
-                this.active[this.activeAnimation.getIndex()],
+                this.active[this.hoverAnimation.getIndex()],
                 this.position.x,
                 this.position.y,
                 this.size.x,
@@ -116,33 +117,41 @@ class Button(position: Vector2,
         }
     }
 
+    private var lastTouch = false;
+
     fun isclick(delta: Float, cameraPosition: Vector2): Boolean {
-        val lastState = this.activeState;
+
         val rtn = this.clickController.isActive(delta) {
+
             if (Gdx.input.isTouched) {
-                if(this.click(cameraPosition))
+                if(!this.lastTouch)
                 {
-                    this.eventClick = true;
-                    this.activeState = true;
+                    if(this.click(cameraPosition))
+                    {
+                        return@isActive true;
+                    }
+                    this.lastTouch = true;
                 }
-            } else {
-                this.activeState = false;
+            }else{
+                this.lastTouch = false;
             }
 
-            return@isActive this.activeState;
+            return@isActive false;
         };
 
-        if (lastState != this.activeState) {
-            if (!this.activeState) {
-                this.clickCount += 1;
-            }
-
-            this.activeAnimation.restart();
-            this.defaultAnimation.restart();
+        if(rtn == InputController.InputStates.CLICK)
+        {
+            this.eventClick = true;
+        }else if(rtn == InputController.InputStates.NONE)
+        {
+            this.hoverState = false;
+        }else if(rtn == InputController.InputStates.HOVER)
+        {
+            this.hoverState = true;
         }
 
-        if (this.activeState) {
-            this.activeAnimation.update(delta)
+        if (this.hoverState) {
+            this.hoverAnimation.update(delta)
             {
                 return@update true;
             };

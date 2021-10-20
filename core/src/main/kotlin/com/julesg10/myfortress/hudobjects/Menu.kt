@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.Texture
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.GlyphLayout
 import com.badlogic.gdx.graphics.g2d.TextureRegion
 import com.badlogic.gdx.math.Vector2
 import com.julesg10.myfortress.GameScreen
@@ -56,6 +57,17 @@ class Menu(position: Vector2,font: BitmapFont?) : HudObj(position) {
 
     override fun render(hudBatch: Batch) {
         if (this.menuState == MenuState.MENU_DEFAULT) {
+
+            val layout = GlyphLayout(font, "My Fortress");
+            HUDText(
+                this.font,
+                hudBatch,
+                position = Vector2((GameScreen.world_size().x - layout.width)/2, GameScreen.world_size().y*0.8f),
+                width = 0f,
+                str = arrayOf("My Fortress")
+            )
+
+
             for (pBtn in this.btnList) {
                 pBtn.first.render(hudBatch);
             }

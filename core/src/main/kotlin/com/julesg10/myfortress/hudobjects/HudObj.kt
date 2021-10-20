@@ -3,6 +3,7 @@ package com.julesg10.myfortress.hudobjects
 import com.badlogic.gdx.graphics.Camera
 import com.badlogic.gdx.graphics.g2d.Batch
 import com.badlogic.gdx.graphics.g2d.BitmapFont
+import com.badlogic.gdx.graphics.g2d.GlyphLayout
 import com.badlogic.gdx.math.Vector2
 import com.badlogic.gdx.math.Vector3
 import com.badlogic.gdx.utils.Align
@@ -20,6 +21,7 @@ open class HudObj(position: Vector2) : GameObj(position) {
         fun HUDText(font: BitmapFont?,hudBatch: Batch,space: Float=5f,Xdirection:Boolean = true,fontSize: Float = GameScreen.default_fontscale(), position: Vector2, width: Float,align: Int = Align.left, wrap: Boolean = false,vararg str:String)
         {
             font?.data?.setScale(fontSize)
+
 
             var i:Float = 0.0f;
             for(s in str)
