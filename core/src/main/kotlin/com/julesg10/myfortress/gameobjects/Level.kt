@@ -152,7 +152,15 @@ class Level() {
 
                                         this.tiles.add(tile)
                                     } else if (section_name == "levelitems") {
-                                        val item = Item(Vector2(x, y), Item.ItemTypes.values()[type], localTextures);
+
+                                        val textureItem = TextureRegion(localTextures[0]);
+                                        textureItem.regionHeight = 0
+                                        for (texture in localTextures)
+                                        {
+                                            textureItem.regionHeight += texture.regionHeight;
+                                        }
+
+                                        val item = Item(Vector2(x, y), Item.ItemTypes.values()[type], textureItem,localTextures.size);
                                         this.items.add(item);
                                     }
                                 }

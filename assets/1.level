@@ -24,7 +24,7 @@ $wall_flag_red: 12,4
 $wall_flag_green: 13,4
 $wall_flag_yellow: 14,4
 
-$gaint_sword: 8,3,8,2
+$gaint_sword: 8,2,8,3
 
 [Player]
 ->position: $p_default
